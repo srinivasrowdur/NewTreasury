@@ -1,0 +1,7 @@
+name = "newtreasury"
+compatibility_date = "2026-05-03"
+pages_build_output_dir = "dist"
+
+[[kv_namespaces]]
+binding = "TREASURY_KV"
+id = "37710a93cc41472c9eee6d973e9f8ea2"
