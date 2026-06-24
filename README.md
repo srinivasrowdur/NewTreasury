@@ -94,6 +94,10 @@ The project is configured by `wrangler.toml`:
 ```toml
 name = "treasury"
 main = "worker.js"
+keep_vars = true
+
+[vars]
+OPENAI_MODEL = "gpt-5.4-mini"
 
 [assets]
 directory = "./dist"
@@ -112,10 +116,17 @@ Root directory: /
 Set Cloudflare environment variables:
 
 ```bash
-OPENAI_API_KEY=...
 OPENAI_MODEL=gpt-5.4-mini
 NODE_VERSION=22.12.0
 ```
+
+Set `OPENAI_API_KEY` as a Worker secret, not as a plain dashboard variable:
+
+```bash
+npx wrangler secret put OPENAI_API_KEY
+```
+
+The Worker config uses `keep_vars = true` so dashboard variables are not deleted by Git deploys. Do not put `OPENAI_API_KEY` under `[vars]`; plain vars can be printed in Cloudflare deployment logs.
 
 Create a Workers KV namespace in the same Cloudflare account as the Workers app, then bind it to the `treasury` Worker:
 
