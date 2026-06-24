@@ -99,6 +99,10 @@ keep_vars = true
 [vars]
 OPENAI_MODEL = "gpt-5.4-mini"
 
+[[kv_namespaces]]
+binding = "TREASURY_KV"
+id = "37710a93cc41472c9eee6d973e9f8ea2"
+
 [assets]
 directory = "./dist"
 binding = "ASSETS"
@@ -128,13 +132,12 @@ npx wrangler secret put OPENAI_API_KEY
 
 The Worker config uses `keep_vars = true` so dashboard variables are not deleted by Git deploys. Do not put `OPENAI_API_KEY` under `[vars]`; plain vars can be printed in Cloudflare deployment logs.
 
-Create a Workers KV namespace in the same Cloudflare account as the Workers app, then bind it to the `treasury` Worker:
+The deployed Worker uses Workers KV for durable job state, latest result, research memory, and price cache. The current namespace is:
 
 ```bash
+Namespace: newtreasury-treasury-kv
 Binding name: TREASURY_KV
 ```
-
-`TREASURY_KV` is used for job state, latest result, research memory, and price cache. The app can build without it, but live research runs are not reliable until the binding exists.
 
 You can preview the Workers build locally with:
 
