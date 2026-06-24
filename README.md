@@ -75,36 +75,41 @@ npm run research:growth
 
 ## Deploy To Cloudflare
 
-This repo includes a Cloudflare Pages Functions backend under `functions/`. The deployed app does not need the local Python process; Cloudflare runs the API routes in Workers-compatible JavaScript.
+This repo deploys to Cloudflare Workers with static assets. The deployed app does not need the local Python process; Cloudflare runs the API routes in Workers-compatible JavaScript.
 
 Cloudflare resources used:
 
-- Pages static hosting for the Vite UI.
-- Pages Functions for `/api/research/run`, `/api/research/status/:id`, and `/research-results/latest.json`.
+- Workers static assets for the Vite UI.
+- A Worker entrypoint for `/api/research/run`, `/api/research/status/:id`, and `/research-results/latest.json`.
 - Workers KV binding `TREASURY_KV` for job state, latest result, research memory, and price cache.
 
 Deploy from the command line:
 
 ```bash
-npm run pages:deploy
+npm run workers:deploy
 ```
 
 The project is configured by `wrangler.toml`:
 
 ```toml
 name = "treasury"
-pages_build_output_dir = "dist"
+main = "worker.js"
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
 ```
 
-In Cloudflare Pages, use these build settings:
+In Cloudflare, use these build settings:
 
 ```bash
 Build command: npm run build
-Build output directory: dist
+Deploy command: npx wrangler deploy
 Root directory: /
 ```
 
-Set Cloudflare Pages environment variables:
+Set Cloudflare environment variables:
 
 ```bash
 OPENAI_API_KEY=...
@@ -112,7 +117,7 @@ OPENAI_MODEL=gpt-5.4-mini
 NODE_VERSION=22.12.0
 ```
 
-Create a Workers KV namespace in the same Cloudflare account as the Pages app, then bind it to the Pages project:
+Create a Workers KV namespace in the same Cloudflare account as the Workers app, then bind it to the `treasury` Worker:
 
 ```bash
 Binding name: TREASURY_KV
@@ -120,18 +125,18 @@ Binding name: TREASURY_KV
 
 `TREASURY_KV` is used for job state, latest result, research memory, and price cache. The app can build without it, but live research runs are not reliable until the binding exists.
 
-You can preview the Pages build and Functions locally with:
+You can preview the Workers build locally with:
 
 ```bash
-npm run pages:dev
+npm run workers:dev
 ```
 
 ## Useful Commands
 
 ```bash
 npm run build
-npm run pages:dev
-npm run pages:deploy
+npm run workers:dev
+npm run workers:deploy
 python3 -m research.run_lab --mandate balanced --experiments 60 --turns 8 --use-llm
 python3 -m research.run_lab --mandate balanced --experiments 60 --turns 8 --fallback-data
 ```

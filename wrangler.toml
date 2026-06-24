@@ -1,3 +1,9 @@
 name = "treasury"
+main = "worker.js"
 compatibility_date = "2026-05-03"
-pages_build_output_dir = "dist"
+workers_dev = true
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
