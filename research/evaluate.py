@@ -299,6 +299,117 @@ def summarize_allocation_change(
     return ", ".join(shifts)
 
 
+SOURCE_LABELS = {
+    "baseline": "baseline",
+    "memory": "research memory",
+    "seed": "seed hypothesis",
+    "llm": "OpenAI hypothesis",
+    "constraint": "constraint response",
+    "grid": "improvement search"
+}
+
+
+def source_label(source: str | None) -> str:
+    return SOURCE_LABELS.get(str(source or ""), str(source or "candidate"))
+
+
+def parse_metric(value: Any) -> float | None:
+    text = "".join(character for character in str(value or "") if character.isdigit() or character in ".-")
+    try:
+        parsed = float(text)
+    except ValueError:
+        return None
+    return parsed if math.isfinite(parsed) else None
+
+
+def guardrail_pressure(row: dict[str, Any]) -> float:
+    current = parse_metric(row.get("current"))
+    limit = parse_metric(row.get("limit"))
+    if current is None or limit is None or limit <= 0:
+        return 0.0
+    return limit / max(current, 0.0001) if ">=" in str(row.get("limit")) else current / limit
+
+
+def rejected_candidate_summary(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    output = []
+    for item in [entry for entry in items if not entry["passes"]][:3]:
+        output.append({
+            "name": item["candidate"]["name"],
+            "score": round(float(item["score"]), 2),
+            "failed_constraints": [
+                row["label"]
+                for row in item["guardrails"]
+                if not row["pass"]
+            ][:3]
+        })
+    return output
+
+
+def constraint_driver(best: dict[str, Any], group: list[dict[str, Any]]) -> dict[str, Any] | None:
+    failed: dict[str, int] = {}
+    for item in group:
+        for row in [entry for entry in item["guardrails"] if not entry["pass"]]:
+            failed[row["label"]] = failed.get(row["label"], 0) + 1
+    if failed:
+        label, count = max(failed.items(), key=lambda item: item[1])
+        return {
+            "label": label,
+            "status": "Rejected candidates",
+            "detail": f"{count} new candidate{'s' if count != 1 else ''} failed this rule."
+        }
+    closest = max(best["guardrails"], key=guardrail_pressure, default=None)
+    if not closest:
+        return None
+    return {
+        "label": closest["label"],
+        "status": "Closest passing rule" if closest["pass"] else "Failed rule",
+        "current": closest["current"],
+        "limit": closest["limit"],
+        "detail": f"{closest['current']} versus {closest['limit']}"
+    }
+
+
+def turn_why_changed(previous_turn: dict[str, Any] | None, best: dict[str, Any], source: str) -> str:
+    best_name = best["candidate"]["name"]
+    candidate_source = source_label(best["candidate"].get("source", source))
+    if previous_turn is None:
+        return "Started from the mandate baseline so every later candidate has a controlled comparison point."
+    if previous_turn["best_candidate"] == best_name:
+        return f"No promotion: the new {source_label(source)} candidates did not beat {best_name} after scoring and guardrails."
+    delta = float(best["score"]) - float(previous_turn.get("score", 0.0))
+    return (
+        f"Promoted {best_name} from {candidate_source} because it ranked higher after return, "
+        f"drawdown, and guardrail checks. Score improved by {delta:+.2f}."
+    )
+
+
+def openai_review(seen: list[dict[str, Any]], group: list[dict[str, Any]], best: dict[str, Any]) -> dict[str, Any]:
+    llm_seen = [item for item in seen if item["candidate"].get("source") == "llm"]
+    llm_in_turn = [item for item in group if item["candidate"].get("source") == "llm"]
+    rejected = sum(1 for item in llm_seen if not item["passes"])
+    accepted_openai = best["candidate"].get("source") == "llm"
+    if not llm_seen:
+        return {
+            "proposed": 0,
+            "accepted": best["candidate"]["name"],
+            "accepted_source": source_label(best["candidate"].get("source")),
+            "rejected": 0,
+            "note": "No OpenAI candidates had entered the search yet."
+        }
+    return {
+        "proposed": len(llm_seen),
+        "proposed_this_turn": len(llm_in_turn),
+        "accepted": best["candidate"]["name"],
+        "accepted_source": source_label(best["candidate"].get("source")),
+        "rejected": rejected,
+        "note": (
+            "Evaluator accepted an OpenAI hypothesis as best so far."
+            if accepted_openai
+            else f"Evaluator kept {source_label(best['candidate'].get('source'))} ahead of the OpenAI proposals."
+        )
+    }
+
+
 def append_turn(
     turns: list[dict[str, Any]],
     seen: list[dict[str, Any]],
@@ -316,6 +427,7 @@ def append_turn(
     best_candidate = best_so_far["candidate"]
     metrics = best_so_far["metrics"]
     weights = rounded_weights(best_candidate["weights"], order)
+    previous_turn = turns[-1] if turns else None
 
     turns.append({
         "turn": len(turns) + 1,
@@ -335,7 +447,11 @@ def append_turn(
         "candidate_passes": bool(best_so_far["passes"]),
         "weights": weights,
         "allocation_groups": allocation_groups(weights, order),
-        "change_summary": summarize_allocation_change(previous_weights, weights, order)
+        "change_summary": summarize_allocation_change(previous_weights, weights, order),
+        "why_changed": turn_why_changed(previous_turn, best_so_far, source),
+        "constraint_driver": constraint_driver(best_so_far, group),
+        "rejected_candidates": rejected_candidate_summary(group),
+        "openai_review": openai_review(seen, group, best_so_far)
     })
     return weights
 

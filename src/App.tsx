@@ -40,6 +40,27 @@ type ResearchTurn = {
   weights: Record<string, number>;
   allocation_groups?: Record<string, number>;
   change_summary: string;
+  why_changed?: string;
+  constraint_driver?: {
+    label: string;
+    status?: string;
+    current?: string;
+    limit?: string;
+    detail?: string;
+  } | null;
+  rejected_candidates?: Array<{
+    name: string;
+    score: number;
+    failed_constraints: string[];
+  }>;
+  openai_review?: {
+    proposed: number;
+    proposed_this_turn?: number;
+    accepted: string;
+    accepted_source: string;
+    rejected: number;
+    note: string;
+  };
 };
 
 type ResearchMemory = {
@@ -726,7 +747,7 @@ function SelfImprovementTurns({
                 <strong>{turn.best_candidate}</strong>
               </div>
               <TurnAllocationBar symbols={symbolsFromResult(result, universeSymbols)} weights={turn.weights} />
-              <p>{turn.change_summary}</p>
+              <TurnExplanation turn={turn} />
             </div>
 
             <div className="turnStats">
@@ -745,6 +766,46 @@ function SelfImprovementTurns({
             </div>
           </article>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function TurnExplanation({ turn }: { turn: ResearchTurn }) {
+  const rejected = turn.rejected_candidates || [];
+  const constraint = turn.constraint_driver;
+  const openAi = turn.openai_review;
+  const rejectedText = rejected.length
+    ? rejected.map((item) => `${item.name}: ${item.failed_constraints.join(", ") || "score"} (${item.score.toFixed(2)})`).join("; ")
+    : "No new candidates rejected in this turn.";
+  const openAiText = openAi
+    ? `${openAi.proposed} proposed · ${openAi.rejected} rejected · accepted ${openAi.accepted_source}`
+    : "OpenAI comparison not available for this run.";
+
+  return (
+    <div className="turnExplanationGrid">
+      <div>
+        <span>Changed</span>
+        <strong>{turn.change_summary}</strong>
+      </div>
+      <div>
+        <span>Why</span>
+        <strong>{turn.why_changed || "Evaluator kept the best passing candidate after scoring."}</strong>
+      </div>
+      <div>
+        <span>Constraint</span>
+        <strong>{constraint ? `${constraint.label}: ${constraint.status || "Checked"}` : "No binding constraint"}</strong>
+        {constraint?.detail && <em>{constraint.detail}</em>}
+      </div>
+      <div>
+        <span>Rejected</span>
+        <strong>{rejected.length ? `${rejected.length} examples` : "None"}</strong>
+        <em>{rejectedText}</em>
+      </div>
+      <div className="wide">
+        <span>OpenAI vs evaluator</span>
+        <strong>{openAiText}</strong>
+        {openAi?.note && <em>{openAi.note}</em>}
       </div>
     </div>
   );

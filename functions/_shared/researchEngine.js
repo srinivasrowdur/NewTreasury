@@ -608,11 +608,115 @@ function summarizeAllocationChange(previous, current, order) {
   }).join(", ");
 }
 
+const sourceLabels = {
+  baseline: "baseline",
+  memory: "research memory",
+  seed: "seed hypothesis",
+  llm: "OpenAI hypothesis",
+  constraint: "constraint response",
+  grid: "improvement search"
+};
+
+function sourceLabel(source) {
+  return sourceLabels[source] || source || "candidate";
+}
+
+function parseMetric(value) {
+  const parsed = Number(String(value || "").replace(/[^0-9.-]/g, ""));
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function guardrailPressure(row) {
+  const current = parseMetric(row.current);
+  const limit = parseMetric(row.limit);
+  if (current == null || limit == null || limit <= 0) return 0;
+  return String(row.limit).includes(">=") ? limit / Math.max(current, 0.0001) : current / limit;
+}
+
+function rejectedCandidateSummary(items) {
+  return items
+    .filter((item) => !item.passes)
+    .slice(0, 3)
+    .map((item) => ({
+      name: item.candidate.name,
+      score: round(item.score, 2),
+      failed_constraints: item.guardrails.filter((row) => !row.pass).map((row) => row.label).slice(0, 3)
+    }));
+}
+
+function constraintDriver(best, group) {
+  const failed = new Map();
+  for (const item of group) {
+    for (const row of item.guardrails.filter((entry) => !entry.pass)) {
+      failed.set(row.label, (failed.get(row.label) || 0) + 1);
+    }
+  }
+  if (failed.size) {
+    const [label, count] = [...failed.entries()].sort((a, b) => b[1] - a[1])[0];
+    return {
+      label,
+      status: "Rejected candidates",
+      detail: `${count} new candidate${count === 1 ? "" : "s"} failed this rule.`
+    };
+  }
+  const closest = [...best.guardrails].sort((a, b) => guardrailPressure(b) - guardrailPressure(a))[0];
+  return closest
+    ? {
+        label: closest.label,
+        status: closest.pass ? "Closest passing rule" : "Failed rule",
+        current: closest.current,
+        limit: closest.limit,
+        detail: `${closest.current} versus ${closest.limit}`
+      }
+    : null;
+}
+
+function turnWhyChanged(previousTurn, best, source) {
+  const bestName = best.candidate.name;
+  const candidateSource = sourceLabel(best.candidate.source || source);
+  if (!previousTurn) {
+    return `Started from the mandate baseline so every later candidate has a controlled comparison point.`;
+  }
+  if (previousTurn.best_candidate === bestName) {
+    return `No promotion: the new ${sourceLabel(source)} candidates did not beat ${bestName} after scoring and guardrails.`;
+  }
+  const delta = best.score - Number(previousTurn.score || 0);
+  const scoreText = Number.isFinite(delta) ? ` Score improved by ${delta >= 0 ? "+" : ""}${delta.toFixed(2)}.` : "";
+  return `Promoted ${bestName} from ${candidateSource} because it ranked higher after return, drawdown, and guardrail checks.${scoreText}`;
+}
+
+function openAiReview(seen, group, best) {
+  const llmSeen = seen.filter((item) => item.candidate.source === "llm");
+  const llmInTurn = group.filter((item) => item.candidate.source === "llm");
+  const rejected = llmSeen.filter((item) => !item.passes).length;
+  const acceptedOpenAi = best.candidate.source === "llm";
+  if (!llmSeen.length) {
+    return {
+      proposed: 0,
+      accepted: best.candidate.name,
+      accepted_source: sourceLabel(best.candidate.source),
+      rejected: 0,
+      note: "No OpenAI candidates had entered the search yet."
+    };
+  }
+  return {
+    proposed: llmSeen.length,
+    proposed_this_turn: llmInTurn.length,
+    accepted: best.candidate.name,
+    accepted_source: sourceLabel(best.candidate.source),
+    rejected,
+    note: acceptedOpenAi
+      ? `Evaluator accepted an OpenAI hypothesis as best so far.`
+      : `Evaluator kept ${sourceLabel(best.candidate.source)} ahead of the OpenAI proposals.`
+  };
+}
+
 function appendTurn(turns, seen, group, label, focus, source, previousWeights, order) {
   seen.push(...group);
   const eligible = seen.filter((item) => item.passes);
   const best = (eligible.length ? eligible : seen).reduce((winner, item) => item.score > winner.score ? item : winner);
   const weights = normalize(best.candidate.weights, order);
+  const previousTurn = turns.at(-1);
   turns.push({
     turn: turns.length + 1,
     source,
@@ -631,7 +735,11 @@ function appendTurn(turns, seen, group, label, focus, source, previousWeights, o
     candidate_passes: Boolean(best.passes),
     weights,
     allocation_groups: allocationGroupWeights(weights, order),
-    change_summary: summarizeAllocationChange(previousWeights, weights, order)
+    change_summary: summarizeAllocationChange(previousWeights, weights, order),
+    why_changed: turnWhyChanged(previousTurn, best, source),
+    constraint_driver: constraintDriver(best, group),
+    rejected_candidates: rejectedCandidateSummary(group),
+    openai_review: openAiReview(seen, group, best)
   });
   return weights;
 }
