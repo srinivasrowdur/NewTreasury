@@ -54,6 +54,8 @@ OPENAI_MODEL=gpt-5.4-mini
 
 The API key is read only by the Python backend. It is not bundled into the browser app.
 
+The project pins Node.js `22.12.0` through `.node-version` and `.nvmrc` so Cloudflare Pages uses a runtime that satisfies Vite and Wrangler.
+
 ## Run Locally
 
 ```bash
@@ -90,12 +92,16 @@ npm run pages:deploy
 The project is configured by `wrangler.toml`:
 
 ```toml
-name = "newtreasury"
+name = "treasury"
 pages_build_output_dir = "dist"
+```
 
-[[kv_namespaces]]
-binding = "TREASURY_KV"
-id = "37710a93cc41472c9eee6d973e9f8ea2"
+In Cloudflare Pages, use these build settings:
+
+```bash
+Build command: npm run build
+Build output directory: dist
+Root directory: /
 ```
 
 Set Cloudflare Pages environment variables:
@@ -103,7 +109,16 @@ Set Cloudflare Pages environment variables:
 ```bash
 OPENAI_API_KEY=...
 OPENAI_MODEL=gpt-5.4-mini
+NODE_VERSION=22.12.0
 ```
+
+Create a Workers KV namespace in the same Cloudflare account as the Pages app, then bind it to the Pages project:
+
+```bash
+Binding name: TREASURY_KV
+```
+
+`TREASURY_KV` is used for job state, latest result, research memory, and price cache. The app can build without it, but live research runs are not reliable until the binding exists.
 
 You can preview the Pages build and Functions locally with:
 
