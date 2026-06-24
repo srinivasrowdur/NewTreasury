@@ -82,6 +82,7 @@ type ResearchResult = {
   rejected_count: number;
   candidate_passes?: boolean;
   constraints_applied?: Partial<ConstraintState>;
+  llm_enabled?: boolean;
   llm_ideas_used?: number;
   requested_turns?: number;
   universe_symbols?: string[];
@@ -282,6 +283,7 @@ const defaultResult: ResearchResult = {
   rejected_count: 0,
   candidate_passes: true,
   constraints_applied: defaultConstraints,
+  llm_enabled: true,
   llm_ideas_used: 8,
   universe_symbols: defaultUniverseSymbols,
   memory: {
@@ -748,6 +750,28 @@ function SelfImprovementTurns({
   );
 }
 
+function OpenAiStrip({ result }: { result: ResearchResult }) {
+  const ideasUsed = result.llm_ideas_used ?? 0;
+  const wasRequested = result.llm_enabled !== false;
+  const openAiTurn = (result.turns || []).find((turn) => turn.source === "llm" || turn.label.toLowerCase().includes("openai"));
+  const headline = !wasRequested ? "Not requested" : ideasUsed > 0 ? `${ideasUsed} generated` : "Requested, 0 returned";
+  const detail = !wasRequested
+    ? "This run used deterministic seed hypotheses only."
+    : ideasUsed > 0 && openAiTurn
+    ? `Visible in ${openAiTurn.label}; best so far was ${openAiTurn.best_candidate}.`
+    : ideasUsed > 0
+    ? "Generated ideas were evaluated, but they did not create a separate visible turn in this view."
+    : "Check the OpenAI key/model in the runtime; deterministic hypotheses still ran.";
+
+  return (
+    <div className={`memoryStrip aiStrip ${ideasUsed > 0 ? "used" : ""}`}>
+      <span>OpenAI</span>
+      <strong>{headline}</strong>
+      <em>{detail}</em>
+    </div>
+  );
+}
+
 function MemoryStrip({ memory }: { memory?: ResearchMemory }) {
   if (!memory) {
     return null;
@@ -863,6 +887,7 @@ function SimulationPanel({
       </div>
 
       <MemoryStrip memory={result.memory} />
+      <OpenAiStrip result={result} />
 
       <div className="stageList">
         {flowSteps.slice(1).map((item, index) => {
