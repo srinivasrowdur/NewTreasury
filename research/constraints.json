@@ -1,0 +1,56 @@
+{
+  "conservative": {
+    "label": "Conservative",
+    "max_drawdown": 0.10,
+    "max_volatility": 0.075,
+    "max_single_asset": 0.50,
+    "max_turnover": 0.35,
+    "min_defensive_weight": 0.45,
+    "min_liquidity_score": 7.0,
+    "baseline_weights": {
+      "VTI": 0.22,
+      "VXUS": 0.12,
+      "AGG": 0.46,
+      "BIL": 0.10,
+      "GLD": 0.06,
+      "VNQ": 0.02,
+      "TIP": 0.02
+    }
+  },
+  "balanced": {
+    "label": "Balanced",
+    "max_drawdown": 0.25,
+    "max_volatility": 0.13,
+    "max_single_asset": 0.45,
+    "max_turnover": 0.45,
+    "min_defensive_weight": 0.25,
+    "min_liquidity_score": 7.0,
+    "baseline_weights": {
+      "VTI": 0.34,
+      "VXUS": 0.18,
+      "AGG": 0.30,
+      "BIL": 0.07,
+      "GLD": 0.07,
+      "VNQ": 0.02,
+      "TIP": 0.02
+    }
+  },
+  "growth": {
+    "label": "Growth",
+    "max_drawdown": 0.22,
+    "max_volatility": 0.15,
+    "max_single_asset": 0.50,
+    "max_turnover": 0.55,
+    "min_defensive_weight": 0.15,
+    "min_liquidity_score": 6.5,
+    "baseline_weights": {
+      "VTI": 0.46,
+      "VXUS": 0.24,
+      "AGG": 0.16,
+      "BIL": 0.04,
+      "GLD": 0.05,
+      "VNQ": 0.03,
+      "TIP": 0.02
+    }
+  }
+}

@@ -1,0 +1,1141 @@
+:root {
+  color-scheme: light;
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-subtle: #f7f8f8;
+  --line: #e5e7eb;
+  --line-strong: #d1d5db;
+  --text: #101418;
+  --muted: #66727c;
+  --soft: #f1f5f4;
+  --teal: #0f766e;
+  --teal-dark: #0b4f4a;
+  --amber: #a16207;
+  --amber-soft: #fff8e5;
+  --shadow: 0 22px 60px rgba(15, 23, 42, 0.08);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+  text-rendering: geometricPrecision;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.appShell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: 72px minmax(0, 1fr) 48px;
+  background: var(--bg);
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+  padding: 0 32px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(18px);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brandMark {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  color: white;
+  background: var(--teal);
+}
+
+.brand strong,
+.brand span {
+  display: block;
+}
+
+.brand strong {
+  font-size: 17px;
+  letter-spacing: 0;
+}
+
+.brand span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.safetyRail {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.safetyRail span {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 13px;
+  color: #334155;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 760;
+  text-transform: uppercase;
+}
+
+.mainStage {
+  width: min(1380px, calc(100vw - 64px));
+  margin: 0 auto;
+  padding: 30px 0 24px;
+}
+
+.heroLine {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px;
+  margin-bottom: 24px;
+}
+
+.heroLine h1 {
+  max-width: 940px;
+  margin: 0 0 10px;
+  font-size: clamp(40px, 3.25vw, 54px);
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.heroLine p {
+  max-width: 690px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.45;
+}
+
+.dataBadge {
+  flex: 0 0 300px;
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 15px 16px;
+  background: var(--surface);
+}
+
+.dataBadge span {
+  color: var(--amber);
+  font-size: 11px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.dataBadge strong {
+  font-size: 15px;
+}
+
+.dataBadge em {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.dataBadge.demo {
+  border-color: rgba(161, 98, 7, 0.28);
+  background: var(--amber-soft);
+}
+
+.dataBadge.market {
+  border-color: rgba(15, 118, 110, 0.28);
+  background: #ecfdf8;
+}
+
+.dataBadge.market span {
+  color: var(--teal);
+}
+
+.flow {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--line);
+}
+
+.flowItem {
+  min-height: 74px;
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 0 18px;
+  background: var(--surface);
+}
+
+.flowDot {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.flowItem strong,
+.flowItem span {
+  display: block;
+}
+
+.flowItem strong {
+  font-size: 14px;
+}
+
+.flowItem span {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.flowItem.active .flowDot,
+.flowItem.done .flowDot {
+  color: white;
+  border-color: var(--teal);
+  background: var(--teal);
+}
+
+.flowItem.active {
+  box-shadow: inset 0 -3px 0 var(--teal);
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: 320px minmax(440px, 1fr) 430px;
+  gap: 18px;
+  margin-top: 16px;
+  align-items: stretch;
+}
+
+.inputPanel,
+.simulationPanel,
+.allocationPanel,
+.reviewPanel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.inputPanel,
+.simulationPanel,
+.allocationPanel {
+  padding: 20px;
+}
+
+.panelTitle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--teal-dark);
+  font-size: 13px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.panelTitle.small {
+  margin-bottom: 10px;
+}
+
+.capitalInput {
+  display: grid;
+  gap: 9px;
+  margin-top: 24px;
+}
+
+.capitalInput span,
+.mandateLine span,
+.universeLine span,
+.etfSummary span,
+.constraintRow span,
+.constraintControl em,
+.proofGrid span,
+.memoryStrip span,
+.turnsHeader span,
+.turnIndex span,
+.turnCandidate span,
+.turnStats span,
+.guardrailList span,
+.metricsRow span,
+.reviewPanel span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.capitalInput input {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--line-strong);
+  border-radius: 0;
+  padding: 0 0 10px;
+  color: var(--text);
+  background: transparent;
+  font-size: 34px;
+  font-weight: 760;
+  letter-spacing: 0;
+  outline: none;
+}
+
+.capitalInput input:focus {
+  border-bottom-color: var(--teal);
+}
+
+.mandateLine,
+.universeLine,
+.constraintRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mandateLine {
+  margin: 18px 0 24px;
+}
+
+.mandateLine strong,
+.universeLine strong,
+.constraintRow strong {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.constraintBlock {
+  display: grid;
+  gap: 16px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 20px 0;
+}
+
+.constraintControl {
+  display: grid;
+  gap: 7px;
+}
+
+.constraintHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.constraintHead span {
+  display: grid;
+  gap: 4px;
+}
+
+.constraintControl em {
+  font-style: normal;
+}
+
+.constraintControl input {
+  width: 100%;
+  accent-color: var(--teal);
+}
+
+.constraintControl input:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.constraintControl small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.constraintNumber {
+  width: 64px;
+  height: 34px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 9px;
+  background: var(--surface-subtle);
+}
+
+.constraintNumber.turnNumber {
+  width: 56px;
+  grid-template-columns: 1fr;
+}
+
+.constraintNumber input {
+  width: 100%;
+  border: 0;
+  padding: 0;
+  color: var(--text);
+  background: transparent;
+  font-size: 14px;
+  font-weight: 800;
+  outline: none;
+  text-align: right;
+}
+
+.constraintNumber b {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.turnDepthControl {
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+
+.etfBlock {
+  display: grid;
+  gap: 10px;
+  border-bottom: 1px solid var(--line);
+  padding: 20px 0;
+}
+
+.etfSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.etfSummary strong {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.etfList {
+  display: grid;
+  gap: 6px;
+  max-height: 318px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.etfChoice {
+  min-height: 42px;
+  display: grid;
+  grid-template-columns: 18px 50px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 9px;
+  row-gap: 2px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 7px 9px;
+  background: var(--surface);
+}
+
+.etfChoice.selected {
+  border-color: rgba(15, 118, 110, 0.28);
+  background: #effaf7;
+}
+
+.etfChoice input {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: var(--teal);
+}
+
+.etfChoice input:disabled {
+  cursor: default;
+}
+
+.etfChoice strong {
+  font-size: 13px;
+}
+
+.etfChoice span {
+  min-width: 0;
+  color: #334155;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.etfChoice em {
+  grid-column: 3;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 11px;
+  font-style: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.universeLine {
+  margin-top: 20px;
+}
+
+.universeLine.compact {
+  margin-top: 10px;
+}
+
+.quietCopy,
+.capitalFootnote {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.quietCopy {
+  margin: 16px 0 0;
+}
+
+.capitalFootnote {
+  margin: 12px 0 0;
+  font-weight: 750;
+}
+
+.simulationPanel {
+  display: grid;
+  align-content: start;
+  gap: 22px;
+}
+
+.simulationHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.simulationHeader span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.simulationHeader h2,
+.allocationPanel h2,
+.emptyAllocation h2 {
+  margin: 7px 0 0;
+  font-size: 26px;
+  line-height: 1.08;
+  letter-spacing: 0;
+}
+
+.primaryAction,
+.bottomBar button {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--teal);
+  border-radius: 8px;
+  padding: 0 17px;
+  color: white;
+  background: var(--teal);
+  font-size: 14px;
+  font-weight: 820;
+}
+
+.primaryAction:disabled,
+.bottomBar button:disabled {
+  cursor: default;
+  opacity: 0.56;
+}
+
+.progressTrack {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--soft);
+}
+
+.progressTrack span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--teal);
+  transition: width 240ms ease;
+}
+
+.stageNarrative {
+  min-height: 54px;
+  margin: 0;
+  color: var(--text);
+  font-size: 21px;
+  line-height: 1.34;
+  font-weight: 650;
+}
+
+.stageNarrative.error {
+  color: #b42318;
+}
+
+.proofGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.proofGrid div {
+  min-height: 82px;
+  display: grid;
+  align-content: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background: var(--surface-subtle);
+}
+
+.proofGrid strong {
+  font-size: 24px;
+}
+
+.memoryStrip {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 190px) minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: var(--surface-subtle);
+}
+
+.memoryStrip.used {
+  border-color: rgba(15, 118, 110, 0.22);
+  background: #effaf7;
+}
+
+.memoryStrip strong {
+  min-width: 0;
+  color: var(--text);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.memoryStrip em {
+  min-width: 0;
+  color: #334155;
+  font-size: 13px;
+  font-style: normal;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.stageList {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.stageList div {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  background: white;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.stageList svg {
+  color: var(--line-strong);
+}
+
+.stageList div.complete {
+  color: var(--teal-dark);
+  border-color: rgba(15, 118, 110, 0.22);
+  background: #effaf7;
+}
+
+.stageList div.active {
+  color: var(--teal-dark);
+  border-color: rgba(15, 118, 110, 0.36);
+  background: #f7fffc;
+  box-shadow: inset 0 0 0 1px rgba(15, 118, 110, 0.12);
+}
+
+.stageList div.complete svg {
+  color: var(--teal);
+}
+
+.stageList div.active svg {
+  color: var(--teal);
+}
+
+.turnsPanel {
+  display: grid;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+
+.turnsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.turnsHeader strong {
+  border: 1px solid rgba(15, 118, 110, 0.2);
+  border-radius: 999px;
+  padding: 5px 9px;
+  color: var(--teal-dark);
+  background: #effaf7;
+  font-size: 12px;
+}
+
+.turnList {
+  display: grid;
+  border-top: 1px solid var(--line);
+}
+
+.turnRow {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr) 154px;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid var(--line);
+  padding: 14px 0;
+}
+
+.turnRow.active {
+  border-radius: 8px;
+  padding-left: 12px;
+  padding-right: 12px;
+  background: #f7fffc;
+  box-shadow: inset 0 0 0 1px rgba(15, 118, 110, 0.18);
+}
+
+.turnIndex {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.turnIndex strong {
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.turnIndex em {
+  color: var(--muted);
+  font-size: 11px;
+  font-style: normal;
+  line-height: 1.25;
+}
+
+.turnMain {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.turnCandidate {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.turnCandidate strong {
+  min-width: 0;
+  font-size: 14px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.turnAllocationBar {
+  height: 8px;
+  display: flex;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--soft);
+}
+
+.turnAllocationBar span {
+  min-width: 2px;
+}
+
+.turnMain p {
+  margin: 0;
+  color: #334155;
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.turnStats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.turnStats div {
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.turnStats span {
+  font-size: 10px;
+}
+
+.turnStats strong {
+  font-size: 15px;
+}
+
+.allocationPanel {
+  min-height: 520px;
+}
+
+.allocationPanel h2 {
+  margin-top: 22px;
+}
+
+.allocationPanel p {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.allocationBar {
+  height: 18px;
+  display: flex;
+  overflow: hidden;
+  margin-top: 22px;
+  border-radius: 999px;
+  background: var(--soft);
+}
+
+.allocationBar span {
+  min-width: 3px;
+}
+
+.allocationList {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.allocationList div {
+  display: grid;
+  grid-template-columns: 12px 1fr 56px 70px;
+  align-items: center;
+  gap: 10px;
+  min-height: 34px;
+}
+
+.allocationList i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.allocationList span,
+.allocationList em {
+  color: var(--muted);
+  font-size: 13px;
+  font-style: normal;
+}
+
+.allocationList strong {
+  text-align: right;
+  font-size: 14px;
+}
+
+.allocationList em {
+  text-align: right;
+}
+
+.metricsRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 18px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+
+.metricsRow div {
+  display: grid;
+  gap: 7px;
+}
+
+.metricsRow strong {
+  font-size: 19px;
+}
+
+.guardrailList {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+
+.guardrailList div {
+  min-height: 34px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 54px 70px;
+  align-items: center;
+  gap: 10px;
+  border-left: 3px solid rgba(15, 118, 110, 0.55);
+  padding-left: 10px;
+}
+
+.guardrailList div.fail {
+  border-left-color: #b42318;
+}
+
+.guardrailList strong {
+  font-size: 14px;
+  text-align: right;
+}
+
+.guardrailList em {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  text-align: right;
+}
+
+.emptyAllocation {
+  min-height: 410px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 15px;
+  text-align: center;
+}
+
+.emptyAllocation span {
+  width: 64px;
+  height: 64px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 50%;
+  background: var(--surface-subtle);
+}
+
+.emptyAllocation h2 {
+  max-width: 280px;
+  margin: 0;
+}
+
+.emptyAllocation p {
+  max-width: 280px;
+  margin: 0;
+}
+
+.reviewPanel {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 1px;
+  overflow: hidden;
+  margin-top: 16px;
+  background: var(--line);
+  box-shadow: none;
+}
+
+.reviewPanel div {
+  min-height: 112px;
+  padding: 22px 24px;
+  background: var(--surface);
+}
+
+.reviewPanel p {
+  margin: 9px 0 0;
+  color: #334155;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.bottomBar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  background: white;
+  font-size: 12px;
+}
+
+.bottomBar button {
+  min-height: 32px;
+  border-radius: 7px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+
+@media (max-width: 1200px) {
+  .mainStage {
+    width: min(1040px, calc(100vw - 40px));
+  }
+
+  .workspace {
+    grid-template-columns: 320px 1fr;
+  }
+
+  .allocationPanel {
+    grid-column: 1 / -1;
+    min-height: auto;
+  }
+}
+
+@media (max-width: 860px) {
+  .appShell {
+    grid-template-rows: auto minmax(0, 1fr) auto;
+  }
+
+  .topBar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .safetyRail {
+    flex-wrap: wrap;
+  }
+
+  .mainStage {
+    width: calc(100vw - 28px);
+    padding-top: 30px;
+  }
+
+  .heroLine {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .heroLine h1 {
+    font-size: 44px;
+  }
+
+  .dataBadge {
+    flex: none;
+    justify-items: start;
+  }
+
+  .flow,
+  .workspace,
+  .proofGrid,
+  .memoryStrip,
+  .stageList,
+  .turnRow,
+  .reviewPanel {
+    grid-template-columns: 1fr;
+  }
+
+  .flowItem {
+    min-height: 70px;
+  }
+
+  .simulationHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .primaryAction {
+    width: 100%;
+  }
+
+  .turnStats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .allocationList div {
+    grid-template-columns: 12px 1fr auto;
+  }
+
+  .guardrailList div {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+
+  .allocationList em {
+    display: none;
+  }
+
+  .bottomBar {
+    min-height: 72px;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+  }
+}
+
+@media (max-width: 520px) {
+  .heroLine h1 {
+    font-size: 37px;
+  }
+
+  .heroLine p {
+    font-size: 16px;
+  }
+
+  .capitalInput input {
+    font-size: 28px;
+  }
+
+  .inputPanel,
+  .simulationPanel,
+  .allocationPanel {
+    padding: 18px;
+  }
+
+  .simulationHeader h2,
+  .allocationPanel h2,
+  .emptyAllocation h2 {
+    font-size: 24px;
+  }
+
+  .stageNarrative {
+    font-size: 18px;
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "assets": [
+    {"symbol": "VTI", "name": "US Total Equity", "category": "Core equity", "liquidity_score": 9.5},
+    {"symbol": "VXUS", "name": "Global ex-US Equity", "category": "Core equity", "liquidity_score": 8.7},
+    {"symbol": "QQQ", "name": "Nasdaq 100 Growth", "category": "Growth equity", "liquidity_score": 9.7},
+    {"symbol": "IWM", "name": "US Small Cap", "category": "Growth equity", "liquidity_score": 9.3},
+    {"symbol": "VTV", "name": "US Value Equity", "category": "Factor equity", "liquidity_score": 8.9},
+    {"symbol": "VUG", "name": "US Growth Equity", "category": "Factor equity", "liquidity_score": 8.9},
+    {"symbol": "USMV", "name": "Minimum Volatility Equity", "category": "Defensive equity", "liquidity_score": 8.4},
+    {"symbol": "AGG", "name": "Core Bonds", "category": "Defensive fixed income", "liquidity_score": 9.1},
+    {"symbol": "BIL", "name": "T-Bills", "category": "Defensive fixed income", "liquidity_score": 9.8},
+    {"symbol": "TIP", "name": "Inflation-Linked Bonds", "category": "Defensive fixed income", "liquidity_score": 8.6},
+    {"symbol": "SHY", "name": "Short Treasuries", "category": "Defensive fixed income", "liquidity_score": 9.2},
+    {"symbol": "TLT", "name": "Long Treasuries", "category": "Duration hedge", "liquidity_score": 9.4},
+    {"symbol": "LQD", "name": "Investment Grade Credit", "category": "Credit", "liquidity_score": 9.0},
+    {"symbol": "HYG", "name": "High Yield Credit", "category": "Credit", "liquidity_score": 9.1},
+    {"symbol": "GLD", "name": "Gold", "category": "Alternatives", "liquidity_score": 8.9},
+    {"symbol": "VNQ", "name": "US Real Estate", "category": "Real assets", "liquidity_score": 8.3},
+    {"symbol": "DBC", "name": "Broad Commodities", "category": "Real assets", "liquidity_score": 7.8}
+  ],
+  "benchmark": {
+    "VTI": 0.60,
+    "AGG": 0.40
+  },
+  "fallback_start": "2015-01-31",
+  "fallback_months": 132
+}

@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.playwright-cli/
+output/
+.env
+.env.local
+.env.*.local
+.DS_Store
+__pycache__/
+*.py[cod]
+research/data/prices.json
+research/experiments/
+research/research_memory.json
+public/research-results/*.json
+public/research-results/memory.json
+src/App 2.tsx
+src/styles 2.css
