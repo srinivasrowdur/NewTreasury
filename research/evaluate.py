@@ -33,9 +33,10 @@ TURN_DEFINITIONS = [
 ALLOCATION_GROUPS = [
     ("equity", "Equity", ("VTI", "VXUS", "QQQ", "IWM", "VTV", "VUG", "USMV")),
     ("defensive", "Defensive", DEFENSIVE_SYMBOLS),
-    ("credit", "Credit", ("HYG",)),
+    ("credit", "Credit", ("HYG", "SLXX.L", "LQD")),
     ("alternatives", "Alternatives", ("GLD", "VNQ", "DBC"))
 ]
+DEFAULT_GBP_USD_RATE = 1.27
 
 
 def load_json(path: Path) -> dict:
@@ -88,28 +89,37 @@ def load_prices(asset_order: list[str] | None = None) -> dict:
         prices = payload.get("prices", {})
     if not all(symbol in prices for symbol in order):
         missing = ", ".join(symbol for symbol in order if symbol not in prices)
-        raise RuntimeError(f"missing price data for selected ETFs: {missing}")
+        raise RuntimeError(f"missing price data for selected instruments: {missing}")
     return payload
 
 
 def aligned_returns(price_payload: dict, asset_order: list[str] | None = None) -> tuple[list[str], dict[str, list[float]]]:
     order = active_order(asset_order)
     prices = price_payload["prices"]
-    common_dates = sorted(set.intersection(*(set(prices[symbol].keys()) for symbol in order)))
-    common_dates = common_dates[-132:] if len(common_dates) > 132 else common_dates
-    if len(common_dates) < 36:
+    monthly_prices: dict[str, dict[str, float]] = {}
+    for symbol in order:
+        series = prices[symbol]
+        by_month: dict[str, float] = {}
+        for date_key in sorted(series):
+            month_key = str(date_key)[:7]
+            by_month[month_key] = float(series[date_key])
+        monthly_prices[symbol] = by_month
+
+    common_months = sorted(set.intersection(*(set(monthly_prices[symbol].keys()) for symbol in order)))
+    common_months = common_months[-132:] if len(common_months) > 132 else common_months
+    if len(common_months) < 36:
         raise RuntimeError("at least 36 months of aligned price data is required")
 
     returns: dict[str, list[float]] = {}
     for symbol in order:
-        series = prices[symbol]
+        series = monthly_prices[symbol]
         symbol_returns = []
-        for before, after in zip(common_dates, common_dates[1:]):
+        for before, after in zip(common_months, common_months[1:]):
             previous = float(series[before])
             current = float(series[after])
             symbol_returns.append((current / previous) - 1)
         returns[symbol] = symbol_returns
-    return common_dates[1:], returns
+    return [f"{month}-01" for month in common_months[1:]], returns
 
 
 def portfolio_returns(
@@ -274,6 +284,63 @@ def allocation_groups(weights: dict[str, float], asset_order: list[str] | None =
     return {
         key: round(sum(float(weights.get(symbol, 0.0)) for symbol in symbols if symbol in order), 6)
         for key, _label, symbols in ALLOCATION_GROUPS
+    }
+
+
+def asset_metadata(universe: dict) -> dict[str, dict[str, Any]]:
+    return {
+        str(asset.get("symbol", "")).upper(): asset
+        for asset in universe.get("assets", [])
+        if asset.get("symbol")
+    }
+
+
+def currency_exposure_summary(
+    weights: dict[str, float],
+    universe: dict,
+    price_payload: dict,
+    asset_order: list[str] | None = None
+) -> dict[str, Any]:
+    order = active_order(asset_order)
+    metadata = asset_metadata(universe)
+    fx = price_payload.get("fx") if isinstance(price_payload.get("fx"), dict) else {}
+    try:
+        gbp_usd_rate = float(fx.get("gbp_usd", DEFAULT_GBP_USD_RATE))
+    except (TypeError, ValueError):
+        gbp_usd_rate = DEFAULT_GBP_USD_RATE
+
+    usd_exposure = 0.0
+    gbp_native = 0.0
+    gbp_hedged = 0.0
+    unhedged = 0.0
+    for symbol in order:
+        weight = float(weights.get(symbol, 0.0))
+        asset = metadata.get(symbol, {})
+        hedge = str(asset.get("hedge") or "USD unhedged")
+        currency = str(asset.get("currency") or "USD")
+        exposure = float(asset.get("usd_exposure", 0.0 if currency == "GBP" else 1.0))
+        usd_exposure += weight * exposure
+        if hedge == "GBP native":
+            gbp_native += weight
+        elif hedge == "GBP hedged":
+            gbp_hedged += weight
+        elif "unhedged" in hedge.lower():
+            unhedged += weight
+
+    usd_exposure = max(0.0, min(1.0, usd_exposure))
+    gbp_native_or_hedged = max(0.0, min(1.0, 1.0 - usd_exposure))
+    return {
+        "base_currency": "GBP",
+        "quote_currency": "USD",
+        "gbp_usd_rate": round(gbp_usd_rate, 4),
+        "source": fx.get("source") or "demo-assumption",
+        "as_of": fx.get("as_of"),
+        "usd_exposure": round(usd_exposure, 6),
+        "gbp_native_or_hedged": round(gbp_native_or_hedged, 6),
+        "gbp_native": round(gbp_native, 6),
+        "gbp_hedged": round(gbp_hedged, 6),
+        "unhedged": round(unhedged, 6),
+        "warning": f"This allocation has {usd_exposure * 100:.1f}% USD exposure before hedging."
     }
 
 
@@ -551,8 +618,10 @@ def evaluate_candidates(
 
     best_candidate = best["candidate"]
     best_metrics = best["metrics"]
+    best_weights = rounded_weights(best_candidate["weights"], order)
+    best_currency_exposure = currency_exposure_summary(best_weights, universe, price_payload, order)
     is_market_data = price_payload["source"] != "synthetic-fallback"
-    source_label = "Public ETF adjusted closes" if is_market_data else "Demonstration scenario data"
+    source_label = "Public instrument closes + GBP/USD FX" if is_market_data else "Demonstration scenario data"
     memo = (
         f"{best_candidate['name']} is the current top-ranked research candidate. "
         "It passed the locked drawdown, volatility, concentration, turnover, defensive-allocation, "
@@ -581,6 +650,7 @@ def evaluate_candidates(
             "is_market_data": is_market_data
         },
         "universe_symbols": order,
+        "currency_exposure": best_currency_exposure,
         "mandate": mandate_rules["label"],
         "completed_experiments": len(evaluated),
         "total_experiments": len(evaluated),
@@ -602,7 +672,7 @@ def evaluate_candidates(
             "max_drawdown": best_metrics["max_drawdown"],
             "sharpe": best_metrics["sharpe"],
             "score": best["score"],
-            "weights": rounded_weights(best_candidate["weights"], order)
+            "weights": best_weights
         },
         "baseline": baseline_metrics,
         "chart": chart,
@@ -617,15 +687,17 @@ def evaluate_candidates(
             for row in best["guardrails"]
         ],
         "audit_trail": [
-            f"Generated {len(evaluated)} candidate strategies for the {mandate_rules['label']} mandate across {len(order)} selected ETFs.",
+            f"Generated {len(evaluated)} candidate strategies for the {mandate_rules['label']} mandate across {len(order)} selected instruments.",
             f"Recorded {len(turns)} self-improvement turns and kept the best passing allocation after each turn.",
             f"Rejected {rejected_count} candidates for guardrail failures.",
+            best_currency_exposure["warning"],
             f"Promoted {best_candidate['name']} after locked evaluator scoring.",
             "Queued recommendation for human portfolio-manager review."
         ],
         "why": [
             "Best risk-adjusted score among candidates passing all hard guardrails.",
-            "Maintains diversification across equity, bond, cash, and alternative exposures.",
+            "Maintains diversification across equity, GBP cash, bond, credit, and alternative exposures.",
+            best_currency_exposure["warning"],
             "Improves expected return while preserving mandate drawdown controls.",
             "All recommendations remain research-only until human approval."
         ],

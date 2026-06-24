@@ -7,7 +7,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parent
 UNIVERSE_PATH = ROOT / "universe.json"
 
-DEFAULT_SELECTED_SYMBOLS = ["VTI", "VXUS", "AGG", "BIL", "GLD", "VNQ", "TIP"]
+DEFAULT_SELECTED_SYMBOLS = ["VTI", "VXUS", "AGG", "ERNS.L", "IGLT.L", "SLXX.L", "IGLH.L", "GLD", "VNQ", "INXG.L"]
 FALLBACK_ASSET_ORDER = [
     "VTI",
     "VXUS",
@@ -18,6 +18,11 @@ FALLBACK_ASSET_ORDER = [
     "USMV",
     "AGG",
     "BIL",
+    "ERNS.L",
+    "IGLT.L",
+    "INXG.L",
+    "SLXX.L",
+    "IGLH.L",
     "TIP",
     "SHY",
     "TLT",

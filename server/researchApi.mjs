@@ -1,12 +1,14 @@
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { readFile } from "node:fs/promises";
+import { readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const latestPath = path.join(root, "public", "research-results", "latest.json");
+const memoryPath = path.join(root, "research", "research_memory.json");
+const publicMemoryPath = path.join(root, "public", "research-results", "memory.json");
 const universePath = path.join(root, "research", "universe.json");
 const jobs = new Map();
 const MIN_PHASE_DISPLAY_MS = 1200;
@@ -40,14 +42,14 @@ function loadApprovedSymbols() {
     const symbols = Array.isArray(payload.assets)
       ? payload.assets.map((asset) => String(asset.symbol || "").toUpperCase()).filter(Boolean)
       : [];
-    return symbols.length ? symbols : ["VTI", "VXUS", "AGG", "BIL", "GLD", "VNQ", "TIP"];
+    return symbols.length ? symbols : ["VTI", "VXUS", "AGG", "ERNS.L", "IGLT.L", "SLXX.L", "IGLH.L", "GLD", "VNQ", "INXG.L"];
   } catch {
-    return ["VTI", "VXUS", "AGG", "BIL", "GLD", "VNQ", "TIP"];
+    return ["VTI", "VXUS", "AGG", "ERNS.L", "IGLT.L", "SLXX.L", "IGLH.L", "GLD", "VNQ", "INXG.L"];
   }
 }
 
 const approvedUniverseSymbols = loadApprovedSymbols();
-const defaultUniverseSymbols = ["VTI", "VXUS", "AGG", "BIL", "GLD", "VNQ", "TIP"].filter((symbol) =>
+const defaultUniverseSymbols = ["VTI", "VXUS", "AGG", "ERNS.L", "IGLT.L", "SLXX.L", "IGLH.L", "GLD", "VNQ", "INXG.L"].filter((symbol) =>
   approvedUniverseSymbols.includes(symbol)
 );
 
@@ -121,6 +123,15 @@ function queueDisplayEvent(job, event) {
 
 async function loadLatestResult() {
   return JSON.parse(await readFile(latestPath, "utf8"));
+}
+
+async function resetResearchState() {
+  jobs.clear();
+  await Promise.all([latestPath, memoryPath, publicMemoryPath].map((filePath) => rm(filePath, { force: true })));
+  return {
+    reset_at: new Date().toISOString(),
+    cleared: ["latest-result", "research-memory"]
+  };
 }
 
 function clamp(value, lower, upper) {
@@ -339,12 +350,25 @@ function startResearchJob(options = {}) {
 }
 
 export function researchApiMiddleware(req, res, next) {
-  if (!req.url?.startsWith("/api/research")) {
+  const requestPath = req.url?.split(/[?#]/)[0] || "";
+
+  if (req.method === "GET" && requestPath === "/research-results/latest.json") {
+    loadLatestResult()
+      .then((payload) => {
+        sendJson(res, 200, payload);
+      })
+      .catch(() => {
+        sendJson(res, 404, { error: "No research result has been generated yet." });
+      });
+    return;
+  }
+
+  if (!requestPath.startsWith("/api/research")) {
     next();
     return;
   }
 
-  if (req.method === "POST" && req.url === "/api/research/run") {
+  if (req.method === "POST" && requestPath === "/api/research/run") {
     readJson(req)
       .then((body) => {
         const job = startResearchJob(body);
@@ -356,7 +380,18 @@ export function researchApiMiddleware(req, res, next) {
     return;
   }
 
-  const statusMatch = req.url.match(/^\/api\/research\/status\/([^/?#]+)/);
+  if (req.method === "POST" && requestPath === "/api/research/reset") {
+    resetResearchState()
+      .then((payload) => {
+        sendJson(res, 200, payload);
+      })
+      .catch((error) => {
+        sendJson(res, 500, { error: error instanceof Error ? error.message : "Research state could not be reset." });
+      });
+    return;
+  }
+
+  const statusMatch = requestPath.match(/^\/api\/research\/status\/([^/]+)/);
   if (req.method === "GET" && statusMatch) {
     const job = jobs.get(statusMatch[1]);
     if (!job) {

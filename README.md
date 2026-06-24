@@ -1,13 +1,13 @@
 # TreasuryLab
 
-TreasuryLab is a stakeholder demo of a self-improving investment research lab. It starts with capital, mandate constraints, and an approved ETF universe, then runs research turns that generate, test, reject, remember, and improve portfolio candidates.
+TreasuryLab is a stakeholder demo of a self-improving investment research lab. It starts with capital, mandate constraints, and an approved instrument shelf, then runs research turns that generate, test, reject, remember, and improve portfolio candidates.
 
 This is research-only software. It does not connect to a brokerage, place trades, or make final suitability decisions.
 
 ## Demo Story
 
 1. Set the capital pool and mandate constraints.
-2. Select the approved ETFs the system is allowed to use.
+2. Select the approved instruments the system is allowed to use.
 3. Run the research engine.
 4. Watch self-improvement turns unfold progressively.
 5. Review the best allocation, guardrail checks, memory recall, and audit note.
@@ -18,10 +18,11 @@ The point of the demo is to make the background work visible: hypotheses are gen
 
 - React/Vite cockpit designed for senior stakeholder walkthroughs.
 - Editable investment constraints and visible research-turn depth.
-- Editable approved ETF universe across equity, defensive fixed income, credit, real assets, and alternatives.
+- Editable approved instrument shelf across equity, GBP cash, gilts, sterling credit, hedged bonds, real assets, and alternatives.
 - Python research backend with candidate generation, guardrail scoring, memory recall, and self-improvement turns.
 - Optional OpenAI hypothesis generation through the Responses API.
-- Public ETF monthly adjusted-close data path with deterministic fallback scenario data.
+- Public monthly adjusted-close and GBP/USD FX data path with deterministic fallback scenario data.
+- GBP-native treasury view with currency exposure, hedged/unhedged split, and USD exposure warning.
 - Local API middleware that streams research job progress to the UI.
 
 ## Architecture

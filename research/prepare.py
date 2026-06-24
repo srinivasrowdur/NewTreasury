@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parent
 DATA_DIR = ROOT / "data"
 UNIVERSE_PATH = ROOT / "universe.json"
 PRICES_PATH = DATA_DIR / "prices.json"
+DEFAULT_GBP_USD_RATE = 1.27
 
 
 def load_universe() -> dict:
@@ -97,6 +98,11 @@ def synthetic_returns(symbol: str, months: int) -> list[float]:
         "USMV": (0.0057, 0.031),
         "AGG": (0.0028, 0.015),
         "BIL": (0.0016, 0.002),
+        "ERNS.L": (0.0028, 0.003),
+        "IGLT.L": (0.0027, 0.021),
+        "INXG.L": (0.0030, 0.025),
+        "SLXX.L": (0.0033, 0.014),
+        "IGLH.L": (0.0029, 0.012),
         "SHY": (0.0019, 0.006),
         "TLT": (0.0030, 0.047),
         "LQD": (0.0037, 0.020),
@@ -114,10 +120,30 @@ def synthetic_returns(symbol: str, months: int) -> list[float]:
         shock = 0.0
         if index in {23, 24, 25, 84, 85, 86}:
             shock = -0.055 if symbol in {"VTI", "VXUS", "QQQ", "IWM", "VTV", "VUG", "VNQ", "HYG"} else 0.008
-        if index in {36, 37, 38} and symbol in {"AGG", "TIP", "TLT", "LQD"}:
+        if index in {36, 37, 38} and symbol in {"AGG", "TIP", "TLT", "LQD", "IGLT.L", "INXG.L", "SLXX.L", "IGLH.L"}:
             shock -= 0.012
         returns.append(mean + cycle + shock + rng.gauss(0, vol))
     return returns
+
+
+def fallback_fx(reason: str = "demo-assumption") -> dict:
+    return {
+        "pair": "GBP/USD",
+        "gbp_usd": DEFAULT_GBP_USD_RATE,
+        "source": reason,
+        "as_of": None
+    }
+
+
+def fetch_gbp_usd_rate(start: date) -> dict:
+    prices = fetch_yahoo_monthly("GBPUSD=X", start)
+    latest_date = max(prices)
+    return {
+        "pair": "GBP/USD",
+        "gbp_usd": round(float(prices[latest_date]), 4),
+        "source": "yahoo-chart-monthly",
+        "as_of": latest_date
+    }
 
 
 def build_synthetic_prices(universe: dict) -> dict:
@@ -134,7 +160,8 @@ def build_synthetic_prices(universe: dict) -> dict:
         output[symbol] = series
     return {
         "source": "synthetic-fallback",
-        "description": "Deterministic scenario data used when public ETF download is unavailable.",
+        "description": "Deterministic scenario data used when public instrument download is unavailable.",
+        "fx": fallback_fx("synthetic-fallback"),
         "prices": output
     }
 
@@ -159,7 +186,10 @@ def prepare_prices(force_fallback: bool = False, symbols: list[str] | None = Non
     selected_symbols = [asset["symbol"] for asset in universe["assets"]]
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     if not force_fallback and cached_prices_cover(selected_symbols):
-        return json.loads(PRICES_PATH.read_text())
+        cached = json.loads(PRICES_PATH.read_text())
+        if "fx" not in cached:
+            cached["fx"] = fallback_fx("cached-without-fx")
+        return cached
     if force_fallback:
         result = build_synthetic_prices(universe)
         PRICES_PATH.write_text(json.dumps(result, indent=2))
@@ -170,10 +200,15 @@ def prepare_prices(force_fallback: bool = False, symbols: list[str] | None = Non
         start = date.fromisoformat(universe["fallback_start"])
         for asset in universe["assets"]:
             downloaded[asset["symbol"]] = fetch_yahoo_monthly(asset["symbol"], start)
+        try:
+            fx = fetch_gbp_usd_rate(start)
+        except (urllib.error.URLError, TimeoutError, RuntimeError, json.JSONDecodeError) as exc:
+            fx = fallback_fx(f"{exc.__class__.__name__}-fallback")
         result = {
             "source": "yahoo-chart-monthly",
-            "description": "Monthly adjusted ETF closes downloaded from Yahoo Finance chart data.",
+            "description": "Monthly adjusted instrument closes and GBP/USD FX downloaded from Yahoo Finance chart data.",
             "downloaded_at": datetime.now(timezone.utc).isoformat(),
+            "fx": fx,
             "prices": downloaded
         }
     except (urllib.error.URLError, TimeoutError, RuntimeError, json.JSONDecodeError) as exc:

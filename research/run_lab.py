@@ -26,7 +26,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--json-events", action="store_true", help="Emit newline-delimited JSON progress events.")
     parser.add_argument("--constraints-json", help="JSON object with evaluator constraint overrides.")
-    parser.add_argument("--universe-json", help="JSON array of approved ETF symbols to include in the run.")
+    parser.add_argument("--universe-json", help="JSON array of approved instrument symbols to include in the run.")
     return parser.parse_args()
 
 

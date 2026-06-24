@@ -529,6 +529,38 @@ button {
   font-weight: 750;
 }
 
+.resetDemoBlock {
+  display: grid;
+  gap: 7px;
+  margin: -6px 0 22px;
+}
+
+.resetDemoBlock button {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  color: var(--text);
+  background: white;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.resetDemoBlock button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.resetDemoBlock span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
 .simulationPanel {
   display: grid;
   align-content: start;
@@ -711,6 +743,50 @@ button {
   color: var(--teal);
 }
 
+.researchSignals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.researchSignals div {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 3px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: var(--surface-subtle);
+}
+
+.researchSignals span {
+  grid-row: span 2;
+  color: var(--teal-dark);
+  font-size: 11px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.researchSignals strong {
+  min-width: 0;
+  font-size: 14px;
+}
+
+.researchSignals em {
+  min-width: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .turnsPanel {
   display: grid;
   gap: 12px;
@@ -740,12 +816,28 @@ button {
 }
 
 .turnRow {
+  width: 100%;
   display: grid;
-  grid-template-columns: 112px minmax(0, 1fr) 154px;
+  grid-template-columns: 96px minmax(0, 1fr) 82px;
+  grid-template-areas:
+    "index main action"
+    "index stats action";
   align-items: center;
   gap: 14px;
+  border: 0;
   border-bottom: 1px solid var(--line);
   padding: 14px 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.turnRow:hover,
+.turnRow:focus-visible {
+  outline: none;
+  background: #f8fafc;
 }
 
 .turnRow.active {
@@ -757,6 +849,7 @@ button {
 }
 
 .turnIndex {
+  grid-area: index;
   display: grid;
   gap: 4px;
   min-width: 0;
@@ -775,6 +868,7 @@ button {
 }
 
 .turnMain {
+  grid-area: main;
   min-width: 0;
   display: grid;
   gap: 8px;
@@ -806,8 +900,9 @@ button {
 }
 
 .turnStats {
+  grid-area: stats;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 6px;
 }
 
@@ -824,6 +919,22 @@ button {
 
 .turnStats strong {
   font-size: 15px;
+}
+
+.turnAction {
+  grid-area: action;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(15, 118, 110, 0.22);
+  border-radius: 999px;
+  color: var(--teal-dark);
+  background: #f7fffc;
+  font-size: 12px;
+  font-weight: 780;
+  white-space: nowrap;
 }
 
 .turnExplanationGrid {
@@ -870,6 +981,159 @@ button {
   font-weight: 520;
 }
 
+.drawerBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(15, 23, 42, 0.26);
+}
+
+.turnDrawer {
+  width: min(540px, calc(100vw - 28px));
+  height: 100%;
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  overflow: auto;
+  border-left: 1px solid var(--line);
+  padding: 24px;
+  background: white;
+  box-shadow: -18px 0 42px rgba(15, 23, 42, 0.16);
+}
+
+.drawerHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.drawerHeader span,
+.drawerHero span,
+.drawerMetrics span,
+.drawerSectionTitle span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 820;
+  text-transform: uppercase;
+}
+
+.drawerHeader h3 {
+  margin: 4px 0 0;
+  font-size: 28px;
+  line-height: 1.05;
+}
+
+.drawerHeader p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.drawerHeader button {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--muted);
+  background: white;
+  cursor: pointer;
+}
+
+.drawerHeader button:hover {
+  color: var(--text);
+  border-color: var(--line-strong);
+}
+
+.drawerHero {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+
+.drawerHero strong {
+  font-size: 20px;
+}
+
+.drawerMetrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.drawerMetrics div {
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--surface-subtle);
+}
+
+.drawerMetrics strong {
+  font-size: 18px;
+}
+
+.drawerHoldings {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+
+.drawerSectionTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.drawerSectionTitle strong {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.drawerHoldings > div:not(.drawerSectionTitle) {
+  min-height: 42px;
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) 58px;
+  align-items: center;
+  gap: 10px;
+}
+
+.drawerHoldings i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.drawerHoldings span {
+  min-width: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.drawerHoldings small {
+  display: block;
+  margin-top: 2px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.drawerHoldings strong {
+  text-align: right;
+  font-size: 14px;
+}
+
 .allocationPanel {
   min-height: 520px;
 }
@@ -906,10 +1170,10 @@ button {
 
 .allocationList div {
   display: grid;
-  grid-template-columns: 12px 1fr 56px 70px;
+  grid-template-columns: 12px minmax(0, 1fr) 56px 70px;
   align-items: center;
   gap: 10px;
-  min-height: 34px;
+  min-height: 42px;
 }
 
 .allocationList i {
@@ -925,6 +1189,22 @@ button {
   font-style: normal;
 }
 
+.allocationList span {
+  min-width: 0;
+}
+
+.allocationList span small {
+  display: block;
+  margin-top: 2px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .allocationList strong {
   text-align: right;
   font-size: 14px;
@@ -932,6 +1212,83 @@ button {
 
 .allocationList em {
   text-align: right;
+}
+
+.currencyPanel {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+  border: 1px solid rgba(15, 118, 110, 0.18);
+  border-radius: 8px;
+  padding: 14px;
+  background: #f7fcfa;
+}
+
+.currencyWarning {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.currencyWarning span {
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 760;
+  line-height: 1.35;
+}
+
+.currencyWarning strong {
+  display: grid;
+  justify-items: end;
+  color: var(--teal-dark);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.currencyWarning small {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.currencyTiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.currencyTiles div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+  border-top: 1px solid rgba(15, 118, 110, 0.16);
+  padding-top: 10px;
+}
+
+.currencyTiles span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.currencyTiles strong {
+  color: var(--text);
+  font-size: 17px;
+}
+
+.currencyTiles em,
+.currencyPanel p {
+  color: var(--muted);
+  font-size: 11px;
+  font-style: normal;
+  line-height: 1.3;
+}
+
+.currencyPanel p {
+  margin: 0;
 }
 
 .metricsRow {
@@ -1108,6 +1465,7 @@ button {
   .flow,
   .workspace,
   .proofGrid,
+  .researchSignals,
   .memoryStrip,
   .stageList,
   .turnRow,
@@ -1129,7 +1487,29 @@ button {
   }
 
   .turnStats {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .turnRow {
+    grid-template-areas:
+      "index"
+      "main"
+      "stats"
+      "action";
+  }
+
+  .turnAction {
+    justify-self: start;
+    padding: 0 14px;
+  }
+
+  .turnDrawer {
+    width: 100vw;
+    padding: 20px;
+  }
+
+  .drawerMetrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .turnExplanationGrid {
@@ -1142,6 +1522,19 @@ button {
 
   .allocationList div {
     grid-template-columns: 12px 1fr auto;
+  }
+
+  .currencyWarning,
+  .currencyTiles {
+    grid-template-columns: 1fr;
+  }
+
+  .currencyWarning {
+    display: grid;
+  }
+
+  .currencyWarning strong {
+    justify-items: start;
   }
 
   .guardrailList div {

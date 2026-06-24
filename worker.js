@@ -1,4 +1,4 @@
-import { createResearchJob, getLatestResult, getResearchJob, jsonResponse } from "./functions/_shared/researchEngine.js";
+import { createResearchJob, getLatestResult, getResearchJob, jsonResponse, resetResearchState } from "./functions/_shared/researchEngine.js";
 
 function assetResponse(request, env) {
   if (env.ASSETS?.fetch) return env.ASSETS.fetch(request);
@@ -16,6 +16,10 @@ async function handleApi(request, env) {
     const options = await request.json().catch(() => ({}));
     const job = await createResearchJob(options, env);
     return jsonResponse(job, 202);
+  }
+
+  if (url.pathname === "/api/research/reset" && request.method === "POST") {
+    return jsonResponse(await resetResearchState(env));
   }
 
   const statusMatch = url.pathname.match(/^\/api\/research\/status\/([^/]+)$/);

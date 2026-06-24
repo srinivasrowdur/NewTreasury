@@ -19,7 +19,7 @@ const constraints = {
     max_turnover: 0.35,
     min_defensive_weight: 0.45,
     min_liquidity_score: 7,
-    baseline_weights: { VTI: 0.22, VXUS: 0.12, AGG: 0.46, BIL: 0.1, GLD: 0.06, VNQ: 0.02, TIP: 0.02 }
+    baseline_weights: { VTI: 0.12, VXUS: 0.06, AGG: 0.06, "ERNS.L": 0.26, "IGLT.L": 0.24, "SLXX.L": 0.14, "IGLH.L": 0.02, "INXG.L": 0.06, GLD: 0.04 }
   },
   balanced: {
     label: "Balanced",
@@ -29,7 +29,7 @@ const constraints = {
     max_turnover: 0.45,
     min_defensive_weight: 0.25,
     min_liquidity_score: 7,
-    baseline_weights: { VTI: 0.34, VXUS: 0.18, AGG: 0.3, BIL: 0.07, GLD: 0.07, VNQ: 0.02, TIP: 0.02 }
+    baseline_weights: { VTI: 0.2, VXUS: 0.1, AGG: 0.06, "ERNS.L": 0.16, "IGLT.L": 0.16, "SLXX.L": 0.1, "IGLH.L": 0.08, "INXG.L": 0.04, GLD: 0.07, VNQ: 0.03 }
   },
   growth: {
     label: "Growth",
@@ -39,48 +39,64 @@ const constraints = {
     max_turnover: 0.55,
     min_defensive_weight: 0.15,
     min_liquidity_score: 6.5,
-    baseline_weights: { VTI: 0.46, VXUS: 0.24, AGG: 0.16, BIL: 0.04, GLD: 0.05, VNQ: 0.03, TIP: 0.02 }
+    baseline_weights: { VTI: 0.36, VXUS: 0.18, QQQ: 0.08, AGG: 0.06, "ERNS.L": 0.08, "IGLT.L": 0.06, "SLXX.L": 0.06, "INXG.L": 0.03, GLD: 0.06, VNQ: 0.03 }
   }
 };
 
 const approvedEtfs = [
-  ["VTI", "US Total Equity", "Core equity", 9.5],
-  ["VXUS", "Global ex-US Equity", "Core equity", 8.7],
-  ["QQQ", "Nasdaq 100 Growth", "Growth equity", 9.7],
-  ["IWM", "US Small Cap", "Growth equity", 9.3],
-  ["VTV", "US Value Equity", "Factor equity", 8.9],
-  ["VUG", "US Growth Equity", "Factor equity", 8.9],
-  ["USMV", "Minimum Volatility Equity", "Defensive equity", 8.4],
-  ["AGG", "Core Bonds", "Defensive fixed income", 9.1],
-  ["BIL", "T-Bills", "Defensive fixed income", 9.8],
-  ["TIP", "Inflation-Linked Bonds", "Defensive fixed income", 8.6],
-  ["SHY", "Short Treasuries", "Defensive fixed income", 9.2],
-  ["TLT", "Long Treasuries", "Duration hedge", 9.4],
-  ["LQD", "Investment Grade Credit", "Credit", 9.0],
-  ["HYG", "High Yield Credit", "Credit", 9.1],
-  ["GLD", "Gold", "Alternatives", 8.9],
-  ["VNQ", "US Real Estate", "Real assets", 8.3],
-  ["DBC", "Broad Commodities", "Real assets", 7.8]
-].map(([symbol, name, category, liquidity_score]) => ({ symbol, name, category, liquidity_score }));
+  ["VTI", "US Total Equity", "Core equity", 9.5, "USD", "USD unhedged", 1],
+  ["VXUS", "Global ex-US Equity", "Core equity", 8.7, "USD", "USD unhedged", 1],
+  ["QQQ", "Nasdaq 100 Growth", "Growth equity", 9.7, "USD", "USD unhedged", 1],
+  ["IWM", "US Small Cap", "Growth equity", 9.3, "USD", "USD unhedged", 1],
+  ["VTV", "US Value Equity", "Factor equity", 8.9, "USD", "USD unhedged", 1],
+  ["VUG", "US Growth Equity", "Factor equity", 8.9, "USD", "USD unhedged", 1],
+  ["USMV", "Minimum Volatility Equity", "Defensive equity", 8.4, "USD", "USD unhedged", 1],
+  ["AGG", "US Core Bonds", "USD fixed income", 9.1, "USD", "USD unhedged", 1],
+  ["BIL", "US T-Bills", "USD cash", 9.8, "USD", "USD unhedged", 1],
+  ["ERNS.L", "iShares GBP Ultrashort Bond", "GBP cash", 8.8, "GBP", "GBP native", 0],
+  ["IGLT.L", "iShares UK Gilts", "GBP government bonds", 8.9, "GBP", "GBP native", 0],
+  ["INXG.L", "iShares Index-Linked Gilts", "GBP inflation-linked bonds", 8.5, "GBP", "GBP native", 0],
+  ["SLXX.L", "iShares GBP Corporate Bond", "GBP credit", 8.4, "GBP", "GBP native", 0],
+  ["IGLH.L", "iShares Global Govt Bond GBP Hedged", "GBP hedged bonds", 8.0, "GBP", "GBP hedged", 0.05],
+  ["TIP", "US Inflation-Linked Bonds", "USD fixed income", 8.6, "USD", "USD unhedged", 1],
+  ["SHY", "US Short Treasuries", "USD fixed income", 9.2, "USD", "USD unhedged", 1],
+  ["TLT", "US Long Treasuries", "Duration hedge", 9.4, "USD", "USD unhedged", 1],
+  ["LQD", "US Investment Grade Credit", "Credit", 9.0, "USD", "USD unhedged", 1],
+  ["HYG", "US High Yield Credit", "Credit", 9.1, "USD", "USD unhedged", 1],
+  ["GLD", "Gold", "Alternatives", 8.9, "USD", "USD unhedged", 1],
+  ["VNQ", "US Real Estate", "Real assets", 8.3, "USD", "USD unhedged", 1],
+  ["DBC", "Broad Commodities", "Real assets", 7.8, "USD", "USD unhedged", 1]
+].map(([symbol, name, category, liquidity_score, currency, hedge, usd_exposure]) => ({
+  symbol,
+  name,
+  category,
+  liquidity_score,
+  currency,
+  hedge,
+  usd_exposure
+}));
 
 const approvedOrder = approvedEtfs.map((asset) => asset.symbol);
-const defaultUniverseSymbols = ["VTI", "VXUS", "AGG", "BIL", "GLD", "VNQ", "TIP"];
-const defensiveSymbols = ["AGG", "BIL", "TIP", "SHY", "TLT", "LQD"];
+const assetBySymbol = Object.fromEntries(approvedEtfs.map((asset) => [asset.symbol, asset]));
+const defaultUniverseSymbols = ["VTI", "VXUS", "AGG", "ERNS.L", "IGLT.L", "SLXX.L", "IGLH.L", "GLD", "VNQ", "INXG.L"];
+const defensiveSymbols = ["AGG", "BIL", "ERNS.L", "IGLT.L", "INXG.L", "SLXX.L", "IGLH.L", "TIP", "SHY", "TLT", "LQD"];
 const allocationGroups = [
   ["equity", "Equity", ["VTI", "VXUS", "QQQ", "IWM", "VTV", "VUG", "USMV"]],
   ["defensive", "Defensive", defensiveSymbols],
-  ["credit", "Credit", ["HYG"]],
+  ["credit", "Credit", ["HYG", "SLXX.L", "LQD"]],
   ["alternatives", "Alternatives", ["GLD", "VNQ", "DBC"]]
 ];
+const DEFAULT_GBP_USD_RATE = 1.27;
 
 const seedIdeas = [
   ["Global Quality Multi-Asset", "Tilt toward diversified equity while preserving defensive ballast."],
-  ["Defensive Carry Blend", "Increase bonds and T-bills to reduce drawdown while retaining income."],
+  ["Defensive Carry Blend", "Increase GBP cash, gilts, and high-quality bonds to reduce drawdown while retaining income."],
   ["Inflation Shock Absorber", "Use gold and TIPS as inflation-sensitive diversifiers."],
   ["Global Equity Balance", "Spread equity risk across US and international exposures."],
   ["Real Asset Sleeve", "Add moderate real asset exposure while respecting drawdown limits."],
-  ["Cash Optionality", "Hold more T-bills to reduce volatility and create rebalance capacity."],
-  ["Bond Barbell", "Pair core bonds with T-bills and TIPS for lower rate sensitivity."],
+  ["Sterling Liquidity Reserve", "Hold more GBP cash-like exposure to reduce volatility and preserve deployment capacity."],
+  ["Gilt Barbell", "Pair ultrashort GBP bonds with gilts and linkers for rate and inflation resilience."],
+  ["GBP Hedge Upgrade", "Test whether hedged global bonds reduce unhedged USD exposure without losing defensive carry."],
   ["Diversified Growth", "Increase equity return drivers without breaching concentration limits."],
   ["Nasdaq Growth Engine", "Test whether a focused growth sleeve improves expected return."],
   ["Minimum Volatility Equity", "Replace broad equity risk with lower-volatility equity exposure."],
@@ -90,18 +106,19 @@ const seedIdeas = [
 ];
 
 const seedTilts = [
-  { VTI: 0.04, VXUS: 0.01, QQQ: 0.02, AGG: -0.03, BIL: -0.02, SHY: -0.02 },
-  { VTI: -0.04, VXUS: -0.01, AGG: 0.03, BIL: 0.02, SHY: 0.02 },
-  { GLD: 0.035, DBC: 0.025, TIP: 0.03, AGG: -0.04, VNQ: -0.01 },
+  { VTI: 0.04, VXUS: 0.01, QQQ: 0.02, "ERNS.L": -0.025, "IGLT.L": -0.025, AGG: -0.02 },
+  { VTI: -0.04, VXUS: -0.01, "ERNS.L": 0.025, "IGLT.L": 0.025, "IGLH.L": 0.015 },
+  { GLD: 0.035, DBC: 0.025, "INXG.L": 0.03, AGG: -0.03, VNQ: -0.01 },
   { VXUS: 0.05, VTI: -0.03, AGG: -0.02 },
   { VNQ: 0.05, VTI: -0.03, AGG: -0.02 },
-  { BIL: 0.035, SHY: 0.025, VTI: -0.03, VXUS: -0.02 },
-  { TIP: 0.035, TLT: 0.025, AGG: -0.03, BIL: -0.02 },
+  { "ERNS.L": 0.04, "SLXX.L": 0.02, VTI: -0.035, VXUS: -0.025 },
+  { "INXG.L": 0.035, "IGLT.L": 0.03, AGG: -0.025, VTI: -0.02 },
+  { "IGLH.L": 0.045, "ERNS.L": 0.02, VTI: -0.035, VXUS: -0.02, AGG: -0.01 },
   { VTI: 0.03, GLD: 0.025, DBC: 0.02, AGG: -0.04, BIL: -0.02 },
   { QQQ: 0.055, VUG: 0.025, AGG: -0.04, BIL: -0.02 },
   { USMV: 0.055, VTI: -0.025, VXUS: -0.015, QQQ: -0.015 },
-  { LQD: 0.04, HYG: 0.025, AGG: -0.03, VTI: -0.02 },
-  { TLT: 0.055, BIL: 0.015, VTI: -0.04, VXUS: -0.02 },
+  { "SLXX.L": 0.04, LQD: 0.02, HYG: 0.015, AGG: -0.025, VTI: -0.02 },
+  { "IGLT.L": 0.045, "INXG.L": 0.02, VTI: -0.04, VXUS: -0.02 },
   { DBC: 0.045, GLD: 0.025, AGG: -0.035, VTI: -0.02 }
 ];
 
@@ -115,6 +132,11 @@ const syntheticParams = {
   USMV: [0.0057, 0.031],
   AGG: [0.0028, 0.015],
   BIL: [0.0016, 0.002],
+  "ERNS.L": [0.0028, 0.003],
+  "IGLT.L": [0.0027, 0.021],
+  "INXG.L": [0.003, 0.025],
+  "SLXX.L": [0.0033, 0.014],
+  "IGLH.L": [0.0029, 0.012],
   SHY: [0.0019, 0.006],
   TLT: [0.003, 0.047],
   LQD: [0.0037, 0.02],
@@ -269,7 +291,12 @@ function defensiveTargetWeights(defensiveTarget, maxSingleAsset, order) {
   target = Math.min(target, cap * defensive.length);
   target = Math.max(target, 1 - cap * nondefensive.length);
   return normalize({
-    ...distributeCapped(target, defensive, { AGG: 0.32, BIL: 0.2, TIP: 0.14, SHY: 0.15, TLT: 0.08, LQD: 0.11 }, cap),
+    ...distributeCapped(
+      target,
+      defensive,
+      { "ERNS.L": 0.22, "IGLT.L": 0.2, "SLXX.L": 0.14, "IGLH.L": 0.12, "INXG.L": 0.1, AGG: 0.1, BIL: 0.04, TIP: 0.04, SHY: 0.02, TLT: 0.01, LQD: 0.01 },
+      cap
+    ),
     ...distributeCapped(1 - target, nondefensive, {
       VTI: 0.28,
       VXUS: 0.16,
@@ -320,13 +347,13 @@ function constraintCandidates(base, overrides, order) {
     output.push(candidate("Constraint Defensive Floor", "Raise the defensive sleeve to satisfy the user-selected defensive minimum.", defensiveTargetWeights(minDefensive, maxSingleAsset, order), "constraint", order));
   }
   if (Number.isFinite(maxDrawdown) && maxDrawdown < 0.19) {
-    output.push(candidate("Lower Drawdown Constraint Fit", "Shift toward bonds, T-bills, and TIPS when the drawdown ceiling is tightened.", defensiveTargetWeights(Math.max(minDefensive, 0.58), maxSingleAsset, order), "constraint", order));
+    output.push(candidate("Lower Drawdown Constraint Fit", "Shift toward GBP cash, gilts, and hedged bonds when the drawdown ceiling is tightened.", defensiveTargetWeights(Math.max(minDefensive, 0.58), maxSingleAsset, order), "constraint", order));
   }
   if (Number.isFinite(maxVolatility) && maxVolatility < 0.1) {
     output.push(candidate("Lower Volatility Constraint Fit", "Reduce equity risk when the volatility ceiling is tightened.", defensiveTargetWeights(Math.max(minDefensive, 0.62), maxSingleAsset, order), "constraint", order));
   }
   if (Number.isFinite(maxSingleAsset) && maxSingleAsset < Math.max(...Object.values(base))) {
-    output.push(candidate("Concentration Constraint Fit", "Redistribute positions so the largest ETF weight respects the single-asset cap.", capAndRedistribute(base, maxSingleAsset, order), "constraint", order));
+    output.push(candidate("Concentration Constraint Fit", "Redistribute positions so the largest instrument weight respects the single-asset cap.", capAndRedistribute(base, maxSingleAsset, order), "constraint", order));
   }
   return output;
 }
@@ -342,8 +369,8 @@ function memoryCandidates(base, memory, overrides, order) {
   if (Number.isFinite(minDefensive) && minDefensive > groupWeight(prior, defensiveSymbols) + 0.01) {
     output.push(candidate("Memory Constraint Repair", "Adapt the remembered allocation to the current defensive floor.", defensiveTargetWeights(minDefensive, maxSingleAsset, order), "memory", order));
   } else {
-    output.push(candidate("Memory Return Recovery", "Test whether the remembered allocation can restore modest equity exposure without breaking guardrails.", applyTilts(prior, { VTI: 0.025, VXUS: 0.015, QQQ: 0.015, AGG: -0.025, BIL: -0.015, SHY: -0.015 }, order), "memory", order));
-    output.push(candidate("Memory Risk Repair", "Test whether the remembered allocation improves drawdown by adding defensive ballast.", applyTilts(prior, { AGG: 0.02, BIL: 0.012, SHY: 0.012, LQD: 0.01, VTI: -0.025, VXUS: -0.015, QQQ: -0.014 }, order), "memory", order));
+    output.push(candidate("Memory Return Recovery", "Test whether the remembered allocation can restore modest equity exposure without breaking guardrails.", applyTilts(prior, { VTI: 0.025, VXUS: 0.015, QQQ: 0.015, "ERNS.L": -0.02, "IGLT.L": -0.015, AGG: -0.01 }, order), "memory", order));
+    output.push(candidate("Memory Risk Repair", "Test whether the remembered allocation improves drawdown by adding defensive ballast.", applyTilts(prior, { "ERNS.L": 0.02, "IGLT.L": 0.016, "IGLH.L": 0.012, "SLXX.L": 0.01, VTI: -0.025, VXUS: -0.015, QQQ: -0.014 }, order), "memory", order));
   }
   if (Number.isFinite(maxSingleAsset) && maxSingleAsset < Math.max(...Object.values(prior))) {
     output.push(candidate("Memory Concentration Repair", "Cap the remembered allocation to respect the current single-asset limit.", capAndRedistribute(prior, maxSingleAsset, order), "memory", order));
@@ -360,11 +387,12 @@ function ideaToCandidate(idea, mandate, index, order) {
   }
   const tilt = String(idea?.tilt || "").toLowerCase();
   const tilts = {};
-  if (tilt.includes("quality") || tilt.includes("equity")) Object.assign(tilts, { VTI: 0.03, VXUS: 0.01, QQQ: 0.02, AGG: -0.03, BIL: -0.01, SHY: -0.01 });
-  if (tilt.includes("defensive") || tilt.includes("drawdown")) Object.assign(tilts, { AGG: 0.03, BIL: 0.02, SHY: 0.02, USMV: 0.02, VTI: -0.04, VXUS: -0.02, QQQ: -0.01 });
-  if (tilt.includes("inflation") || tilt.includes("real")) Object.assign(tilts, { GLD: 0.03, DBC: 0.025, TIP: 0.025, AGG: -0.03, VTI: -0.02 });
-  if (tilt.includes("credit") || tilt.includes("income")) Object.assign(tilts, { LQD: 0.025, HYG: 0.025, AGG: -0.02, VTI: -0.015, VXUS: -0.015 });
-  if (tilt.includes("duration") || tilt.includes("treasury")) Object.assign(tilts, { TLT: 0.035, SHY: 0.015, AGG: -0.025, VTI: -0.015, VXUS: -0.01 });
+  if (tilt.includes("quality") || tilt.includes("equity")) Object.assign(tilts, { VTI: 0.03, VXUS: 0.01, QQQ: 0.02, "ERNS.L": -0.02, "IGLT.L": -0.02, AGG: -0.01 });
+  if (tilt.includes("defensive") || tilt.includes("drawdown")) Object.assign(tilts, { "ERNS.L": 0.025, "IGLT.L": 0.025, "IGLH.L": 0.015, USMV: 0.02, VTI: -0.04, VXUS: -0.02, QQQ: -0.01 });
+  if (tilt.includes("inflation") || tilt.includes("real")) Object.assign(tilts, { GLD: 0.03, DBC: 0.025, "INXG.L": 0.03, TIP: 0.015, AGG: -0.02, VTI: -0.02 });
+  if (tilt.includes("credit") || tilt.includes("income")) Object.assign(tilts, { "SLXX.L": 0.03, LQD: 0.02, HYG: 0.02, AGG: -0.02, VTI: -0.015, VXUS: -0.015 });
+  if (tilt.includes("duration") || tilt.includes("treasury")) Object.assign(tilts, { "IGLT.L": 0.035, "INXG.L": 0.015, TLT: 0.015, AGG: -0.02, VTI: -0.015, VXUS: -0.01 });
+  if (tilt.includes("hedge") || tilt.includes("currency") || tilt.includes("sterling") || tilt.includes("gbp")) Object.assign(tilts, { "IGLH.L": 0.035, "ERNS.L": 0.02, VTI: -0.025, VXUS: -0.015, AGG: -0.015 });
   return Object.keys(tilts).length ? candidate(name, hypothesis, applyTilts(base, tilts, order), "llm", order) : null;
 }
 
@@ -406,7 +434,7 @@ function syntheticReturns(symbol, months) {
     const cycle = Math.sin(index / 9) * 0.006;
     let shock = 0;
     if ([23, 24, 25, 84, 85, 86].includes(index)) shock = ["VTI", "VXUS", "QQQ", "IWM", "VTV", "VUG", "VNQ", "HYG"].includes(symbol) ? -0.055 : 0.008;
-    if ([36, 37, 38].includes(index) && ["AGG", "TIP", "TLT", "LQD"].includes(symbol)) shock -= 0.012;
+    if ([36, 37, 38].includes(index) && ["AGG", "TIP", "TLT", "LQD", "IGLT.L", "INXG.L", "SLXX.L", "IGLH.L"].includes(symbol)) shock -= 0.012;
     const noise = (random() + random() + random() + random() + random() + random() - 3) * vol * 0.82;
     output.push(mean + cycle + shock + noise);
   }
@@ -427,8 +455,18 @@ function buildSyntheticPrices(order) {
   }
   return {
     source: "synthetic-fallback",
-    description: "Deterministic scenario data used when public ETF download is unavailable.",
+    description: "Deterministic scenario data used when public instrument download is unavailable.",
+    fx: fallbackFx("synthetic-fallback"),
     prices
+  };
+}
+
+function fallbackFx(source = "demo-assumption") {
+  return {
+    pair: "GBP/USD",
+    gbp_usd: DEFAULT_GBP_USD_RATE,
+    source,
+    as_of: null
   };
 }
 
@@ -463,20 +501,40 @@ async function fetchYahooMonthly(symbol, startDate) {
   return prices;
 }
 
+async function fetchGbpUsdRate(startDate) {
+  const prices = await fetchYahooMonthly("GBPUSD=X", startDate);
+  const latestDate = Object.keys(prices).sort().at(-1);
+  return {
+    pair: "GBP/USD",
+    gbp_usd: round(Number(prices[latestDate]), 4),
+    source: "yahoo-chart-monthly",
+    as_of: latestDate
+  };
+}
+
 async function preparePrices(order, env, forceFallback) {
   const cacheKey = `prices:${order.join(",")}`;
   if (!forceFallback) {
     const cached = await getJson(env, cacheKey);
-    if (cached?.prices && order.every((symbol) => cached.prices[symbol])) return cached;
+    if (cached?.prices && order.every((symbol) => cached.prices[symbol])) {
+      return { ...cached, fx: cached.fx || fallbackFx("cached-without-fx") };
+    }
   }
   if (forceFallback) return buildSyntheticPrices(order);
   try {
     const start = new Date(Date.UTC(2015, 0, 31));
     const entries = await Promise.all(order.map(async (symbol) => [symbol, await fetchYahooMonthly(symbol, start)]));
+    let fx = fallbackFx("fx-fallback");
+    try {
+      fx = await fetchGbpUsdRate(start);
+    } catch (error) {
+      fx = fallbackFx(error instanceof Error ? `${error.name}-fallback` : "fx-fallback");
+    }
     const payload = {
       source: "yahoo-chart-monthly",
-      description: "Monthly adjusted ETF closes downloaded from Yahoo Finance chart data.",
+      description: "Monthly adjusted instrument closes and GBP/USD FX downloaded from Yahoo Finance chart data.",
       downloaded_at: new Date().toISOString(),
+      fx,
       prices: Object.fromEntries(entries)
     };
     await putJson(env, cacheKey, payload, 60 * 60 * 12);
@@ -490,20 +548,28 @@ async function preparePrices(order, env, forceFallback) {
 }
 
 function alignedReturns(pricePayload, order) {
-  const dateSets = order.map((symbol) => new Set(Object.keys(pricePayload.prices[symbol] || {})));
-  const commonDates = Array.from(dateSets.reduce((intersection, set) => new Set([...intersection].filter((item) => set.has(item))))).sort();
-  const dates = commonDates.slice(-132);
-  if (dates.length < 36) throw new Error("At least 36 months of aligned price data is required.");
+  const monthlyPrices = {};
+  for (const symbol of order) {
+    monthlyPrices[symbol] = {};
+    const series = pricePayload.prices[symbol] || {};
+    for (const date of Object.keys(series).sort()) {
+      monthlyPrices[symbol][date.slice(0, 7)] = Number(series[date]);
+    }
+  }
+  const monthSets = order.map((symbol) => new Set(Object.keys(monthlyPrices[symbol] || {})));
+  const commonMonths = Array.from(monthSets.reduce((intersection, set) => new Set([...intersection].filter((item) => set.has(item))))).sort();
+  const months = commonMonths.slice(-132);
+  if (months.length < 36) throw new Error("At least 36 months of aligned price data is required.");
   const returns = {};
   for (const symbol of order) {
     returns[symbol] = [];
-    for (let index = 1; index < dates.length; index += 1) {
-      const previous = Number(pricePayload.prices[symbol][dates[index - 1]]);
-      const current = Number(pricePayload.prices[symbol][dates[index]]);
+    for (let index = 1; index < months.length; index += 1) {
+      const previous = Number(monthlyPrices[symbol][months[index - 1]]);
+      const current = Number(monthlyPrices[symbol][months[index]]);
       returns[symbol].push(current / previous - 1);
     }
   }
-  return { dates: dates.slice(1), returns };
+  return { dates: months.slice(1).map((month) => `${month}-01`), returns };
 }
 
 function portfolioReturns(weights, returns, order) {
@@ -595,6 +661,41 @@ function scoreCandidate(metrics, baselineMetrics, rows) {
 function allocationGroupWeights(weights, order) {
   const active = new Set(order);
   return Object.fromEntries(allocationGroups.map(([key, _label, symbols]) => [key, round(symbols.filter((symbol) => active.has(symbol)).reduce((sum, symbol) => sum + Number(weights[symbol] || 0), 0), 6)]));
+}
+
+function currencyExposureSummary(weights, order, pricePayload = {}) {
+  const fx = pricePayload.fx && typeof pricePayload.fx === "object" ? pricePayload.fx : fallbackFx();
+  const gbpUsdRate = Number.isFinite(Number(fx.gbp_usd)) ? Number(fx.gbp_usd) : DEFAULT_GBP_USD_RATE;
+  let usdExposure = 0;
+  let gbpNative = 0;
+  let gbpHedged = 0;
+  let unhedged = 0;
+  for (const symbol of order) {
+    const weight = Number(weights[symbol] || 0);
+    const asset = assetBySymbol[symbol] || {};
+    const currency = asset.currency || "USD";
+    const hedge = asset.hedge || "USD unhedged";
+    const residualUsdExposure = Number.isFinite(Number(asset.usd_exposure)) ? Number(asset.usd_exposure) : currency === "GBP" ? 0 : 1;
+    usdExposure += weight * residualUsdExposure;
+    if (hedge === "GBP native") gbpNative += weight;
+    else if (hedge === "GBP hedged") gbpHedged += weight;
+    else if (hedge.toLowerCase().includes("unhedged")) unhedged += weight;
+  }
+  usdExposure = Math.max(0, Math.min(1, usdExposure));
+  const gbpNativeOrHedged = Math.max(0, Math.min(1, 1 - usdExposure));
+  return {
+    base_currency: "GBP",
+    quote_currency: "USD",
+    gbp_usd_rate: round(gbpUsdRate, 4),
+    source: fx.source || "demo-assumption",
+    as_of: fx.as_of || null,
+    usd_exposure: round(usdExposure, 6),
+    gbp_native_or_hedged: round(gbpNativeOrHedged, 6),
+    gbp_native: round(gbpNative, 6),
+    gbp_hedged: round(gbpHedged, 6),
+    unhedged: round(unhedged, 6),
+    warning: `This allocation has ${(usdExposure * 100).toFixed(1)}% USD exposure before hedging.`
+  };
 }
 
 function summarizeAllocationChange(previous, current, order) {
@@ -792,13 +893,13 @@ async function generateHypotheses(mandate, count, memoryContext, order, env) {
   const sampleWeights = Object.fromEntries(order.map((symbol) => [symbol, round(1 / order.length, 4)]));
   const prompt = `You are generating research-only portfolio strategy hypotheses for an offline evaluator.
 Return only JSON, with no markdown. Use this shape:
-[{"name":"short candidate name","hypothesis":"one sentence explaining the research idea","tilt":"quality|defensive|inflation|real assets|global diversification|credit|duration","weights":${JSON.stringify(sampleWeights)}}]
+[{"name":"short candidate name","hypothesis":"one sentence explaining the research idea","tilt":"quality|defensive|inflation|real assets|global diversification|credit|duration|currency hedge|sterling","weights":${JSON.stringify(sampleWeights)}}]
 
 Rules:
 - Generate ${count} candidates for the ${mandate} mandate.
 - Weights must sum to 1.0.
 - No leverage, no options, no individual securities, no live trading.
-- Use only these approved ETF symbols: ${order.join(", ")}.
+- Use only these approved instrument symbols: ${order.join(", ")}.
 - Do not claim guaranteed return.
 
 Research memory from prior runs:
@@ -918,6 +1019,8 @@ async function evaluateResearch({ mandate, experiments, turns, useLlm, fallbackD
   const rejectedCount = evaluated.filter((item) => !item.passes).length;
   const isMarketData = pricePayload.source !== "synthetic-fallback";
   const failedRules = best.guardrails.filter((row) => !row.pass).map((row) => row.label).join(", ");
+  const bestWeights = normalize(best.candidate.weights, order);
+  const currencyExposure = currencyExposureSummary(bestWeights, order, pricePayload);
   const result = {
     schema_version: 1,
     session_id: `research-${new Date().toISOString().replace(/\D/g, "").slice(0, 14)}`,
@@ -925,7 +1028,7 @@ async function evaluateResearch({ mandate, experiments, turns, useLlm, fallbackD
     source: pricePayload.source,
     data_summary: {
       source: pricePayload.source,
-      label: isMarketData ? "Public ETF adjusted closes" : "Demonstration scenario data",
+      label: isMarketData ? "Public instrument closes + GBP/USD FX" : "Demonstration scenario data",
       description: pricePayload.description || "",
       range_start: dates[0],
       range_end: dates.at(-1),
@@ -934,6 +1037,7 @@ async function evaluateResearch({ mandate, experiments, turns, useLlm, fallbackD
       is_market_data: isMarketData
     },
     universe_symbols: order,
+    currency_exposure: currencyExposure,
     mandate: rules.label,
     completed_experiments: evaluated.length,
     total_experiments: evaluated.length,
@@ -951,22 +1055,24 @@ async function evaluateResearch({ mandate, experiments, turns, useLlm, fallbackD
       max_drawdown: best.metrics.max_drawdown,
       sharpe: best.metrics.sharpe,
       score: best.score,
-      weights: normalize(best.candidate.weights, order)
+      weights: bestWeights
     },
     baseline: baselineMetrics,
     chart,
     turns: selfImprovementTurns,
     risk: best.guardrails.map((row) => ({ label: row.label, limit: row.limit, current: row.current, status: row.pass ? "Pass" : "Fail" })),
     audit_trail: [
-      `Generated ${evaluated.length} candidate strategies for the ${rules.label} mandate across ${order.length} selected ETFs.`,
+      `Generated ${evaluated.length} candidate strategies for the ${rules.label} mandate across ${order.length} selected instruments.`,
       `Recorded ${selfImprovementTurns.length} self-improvement turns and kept the best passing allocation after each turn.`,
       `Rejected ${rejectedCount} candidates for guardrail failures.`,
+      currencyExposure.warning,
       `Promoted ${best.candidate.name} after locked evaluator scoring.`,
       "Queued recommendation for human portfolio-manager review."
     ],
     why: [
       "Best risk-adjusted score among candidates passing all hard guardrails.",
-      "Maintains diversification across equity, bond, cash, and alternative exposures.",
+      "Maintains diversification across equity, GBP cash, bond, credit, and alternative exposures.",
+      currencyExposure.warning,
       "Improves expected return while preserving mandate drawdown controls.",
       "All recommendations remain research-only until human approval."
     ],
@@ -988,6 +1094,14 @@ function resultAtTurn(result, turnIndex) {
   const turns = Array.isArray(result.turns) ? result.turns.slice(0, turnIndex) : [];
   const activeTurn = turns.at(-1);
   if (!activeTurn) return result;
+  const order = Array.isArray(result.universe_symbols) ? result.universe_symbols : Object.keys(activeTurn.weights || {});
+  const fx = result.currency_exposure
+    ? {
+        gbp_usd: result.currency_exposure.gbp_usd_rate,
+        source: result.currency_exposure.source,
+        as_of: result.currency_exposure.as_of
+      }
+    : fallbackFx();
   return {
     ...result,
     turns,
@@ -1005,7 +1119,8 @@ function resultAtTurn(result, turnIndex) {
       sharpe: activeTurn.sharpe,
       score: activeTurn.score,
       weights: activeTurn.weights
-    }
+    },
+    currency_exposure: currencyExposureSummary(activeTurn.weights, order, { fx })
   };
 }
 
@@ -1073,6 +1188,14 @@ async function getLatestResult(env) {
   return getJson(env, "latest-result");
 }
 
+async function resetResearchState(env) {
+  await Promise.all([deleteJson(env, "latest-result"), deleteJson(env, "research-memory")]);
+  return {
+    reset_at: new Date().toISOString(),
+    cleared: ["latest-result", "research-memory"]
+  };
+}
+
 async function getJson(env, key) {
   if (env.TREASURY_KV?.get) {
     const value = await env.TREASURY_KV.get(key, "json");
@@ -1091,4 +1214,13 @@ async function putJson(env, key, value, expirationTtl) {
   globalThis.__TREASURY_MEMORY[key] = value;
 }
 
-export { createResearchJob, getLatestResult, getResearchJob, jsonResponse };
+async function deleteJson(env, key) {
+  if (env.TREASURY_KV?.delete) {
+    await env.TREASURY_KV.delete(key);
+    return;
+  }
+  globalThis.__TREASURY_MEMORY = globalThis.__TREASURY_MEMORY || {};
+  delete globalThis.__TREASURY_MEMORY[key];
+}
+
+export { createResearchJob, getLatestResult, getResearchJob, jsonResponse, resetResearchState };

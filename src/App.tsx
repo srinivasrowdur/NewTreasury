@@ -7,10 +7,12 @@ import {
   Layers3,
   Lock,
   Play,
+  RefreshCcw,
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
-  UserRoundCheck
+  UserRoundCheck,
+  X
 } from "lucide-react";
 import { Mandate } from "./data/researchData";
 
@@ -107,6 +109,7 @@ type ResearchResult = {
   llm_ideas_used?: number;
   requested_turns?: number;
   universe_symbols?: string[];
+  currency_exposure?: CurrencyExposure;
   memory?: ResearchMemory;
   turns?: ResearchTurn[];
   candidate: {
@@ -137,6 +140,12 @@ type ResearchJobStatus = {
   error?: string | null;
 };
 
+type ResearchResetResponse = {
+  reset_at?: string;
+  cleared?: string[];
+  error?: string;
+};
+
 type FlowStep = {
   title: string;
   description: string;
@@ -146,6 +155,23 @@ type EtfOption = {
   symbol: string;
   label: string;
   category: string;
+  currency: "GBP" | "USD";
+  hedge: "GBP native" | "GBP hedged" | "USD unhedged";
+  usdExposure: number;
+};
+
+type CurrencyExposure = {
+  base_currency: "GBP";
+  quote_currency: "USD";
+  gbp_usd_rate: number;
+  source: string;
+  as_of?: string | null;
+  usd_exposure: number;
+  gbp_native_or_hedged: number;
+  gbp_native: number;
+  gbp_hedged: number;
+  unhedged: number;
+  warning: string;
 };
 
 const flowSteps: FlowStep[] = [
@@ -157,28 +183,35 @@ const flowSteps: FlowStep[] = [
 ];
 
 const approvedEtfs: EtfOption[] = [
-  { symbol: "VTI", label: "US total equity", category: "Core equity" },
-  { symbol: "VXUS", label: "Global ex-US equity", category: "Core equity" },
-  { symbol: "QQQ", label: "Nasdaq 100", category: "Growth equity" },
-  { symbol: "IWM", label: "US small cap", category: "Growth equity" },
-  { symbol: "VTV", label: "US value", category: "Factor equity" },
-  { symbol: "VUG", label: "US growth", category: "Factor equity" },
-  { symbol: "USMV", label: "Minimum volatility", category: "Defensive equity" },
-  { symbol: "AGG", label: "Core bonds", category: "Defensive fixed income" },
-  { symbol: "BIL", label: "T-bills", category: "Defensive fixed income" },
-  { symbol: "TIP", label: "Inflation-linked bonds", category: "Defensive fixed income" },
-  { symbol: "SHY", label: "Short Treasuries", category: "Defensive fixed income" },
-  { symbol: "TLT", label: "Long Treasuries", category: "Duration hedge" },
-  { symbol: "LQD", label: "Investment grade credit", category: "Credit" },
-  { symbol: "HYG", label: "High yield credit", category: "Credit" },
-  { symbol: "GLD", label: "Gold", category: "Alternatives" },
-  { symbol: "VNQ", label: "US real estate", category: "Real assets" },
-  { symbol: "DBC", label: "Broad commodities", category: "Real assets" }
+  { symbol: "VTI", label: "US total equity", category: "Core equity", currency: "USD", hedge: "USD unhedged", usdExposure: 1 },
+  { symbol: "VXUS", label: "Global ex-US equity", category: "Core equity", currency: "USD", hedge: "USD unhedged", usdExposure: 1 },
+  { symbol: "QQQ", label: "Nasdaq 100", category: "Growth equity", currency: "USD", hedge: "USD unhedged", usdExposure: 1 },
+  { symbol: "IWM", label: "US small cap", category: "Growth equity", currency: "USD", hedge: "USD unhedged", usdExposure: 1 },
+  { symbol: "VTV", label: "US value", category: "Factor equity", currency: "USD", hedge: "USD unhedged", usdExposure: 1 },
+  { symbol: "VUG", label: "US growth", category: "Factor equity", currency: "USD", hedge: "USD unhedged", usdExposure: 1 },
+  { symbol: "USMV", label: "Minimum volatility", category: "Defensive equity", currency: "USD", hedge: "USD unhedged", usdExposure: 1 },
+  { symbol: "AGG", label: "US core bonds", category: "USD fixed income", currency: "USD", hedge: "USD unhedged", usdExposure: 1 },
+  { symbol: "BIL", label: "US T-bills", category: "USD cash", currency: "USD", hedge: "USD unhedged", usdExposure: 1 },
+  { symbol: "ERNS.L", label: "GBP cash proxy", category: "GBP cash", currency: "GBP", hedge: "GBP native", usdExposure: 0 },
+  { symbol: "IGLT.L", label: "UK gilts", category: "GBP government bonds", currency: "GBP", hedge: "GBP native", usdExposure: 0 },
+  { symbol: "INXG.L", label: "Index-linked gilts", category: "GBP inflation bonds", currency: "GBP", hedge: "GBP native", usdExposure: 0 },
+  { symbol: "SLXX.L", label: "GBP corporate bonds", category: "GBP credit", currency: "GBP", hedge: "GBP native", usdExposure: 0 },
+  { symbol: "IGLH.L", label: "GBP-hedged global bonds", category: "GBP hedged bonds", currency: "GBP", hedge: "GBP hedged", usdExposure: 0.05 },
+  { symbol: "TIP", label: "US inflation-linked bonds", category: "USD fixed income", currency: "USD", hedge: "USD unhedged", usdExposure: 1 },
+  { symbol: "SHY", label: "US short Treasuries", category: "USD fixed income", currency: "USD", hedge: "USD unhedged", usdExposure: 1 },
+  { symbol: "TLT", label: "US long Treasuries", category: "Duration hedge", currency: "USD", hedge: "USD unhedged", usdExposure: 1 },
+  { symbol: "LQD", label: "US investment grade", category: "Credit", currency: "USD", hedge: "USD unhedged", usdExposure: 1 },
+  { symbol: "HYG", label: "US high yield", category: "Credit", currency: "USD", hedge: "USD unhedged", usdExposure: 1 },
+  { symbol: "GLD", label: "Gold", category: "Alternatives", currency: "USD", hedge: "USD unhedged", usdExposure: 1 },
+  { symbol: "VNQ", label: "US real estate", category: "Real assets", currency: "USD", hedge: "USD unhedged", usdExposure: 1 },
+  { symbol: "DBC", label: "Broad commodities", category: "Real assets", currency: "USD", hedge: "USD unhedged", usdExposure: 1 }
 ];
 
 const assetOrder = approvedEtfs.map((asset) => asset.symbol);
-const defaultUniverseSymbols = ["VTI", "VXUS", "AGG", "BIL", "GLD", "VNQ", "TIP"];
+const assetMetadata: Record<string, EtfOption> = Object.fromEntries(approvedEtfs.map((asset) => [asset.symbol, asset]));
+const defaultUniverseSymbols = ["VTI", "VXUS", "AGG", "ERNS.L", "IGLT.L", "SLXX.L", "IGLH.L", "GLD", "VNQ", "INXG.L"];
 const minUniverseSymbols = 5;
+const defaultGbpUsdRate = 1.27;
 
 const assetLabels: Record<string, string> = {
   VTI: "US equity",
@@ -188,12 +221,17 @@ const assetLabels: Record<string, string> = {
   VTV: "Value equity",
   VUG: "Growth equity",
   USMV: "Low-vol equity",
-  AGG: "Bonds",
-  BIL: "T-bills",
-  SHY: "Short Treasuries",
-  TLT: "Long Treasuries",
-  LQD: "IG credit",
-  HYG: "High yield",
+  AGG: "US bonds",
+  BIL: "US T-bills",
+  "ERNS.L": "GBP cash",
+  "IGLT.L": "UK gilts",
+  "INXG.L": "Index-linked gilts",
+  "SLXX.L": "GBP credit",
+  "IGLH.L": "GBP-hedged bonds",
+  SHY: "US short Treasuries",
+  TLT: "US long Treasuries",
+  LQD: "US IG credit",
+  HYG: "US high yield",
   GLD: "Gold",
   VNQ: "Real estate",
   TIP: "TIPS",
@@ -210,6 +248,11 @@ const assetColors: Record<string, string> = {
   USMV: "#16a34a",
   AGG: "#64748b",
   BIL: "#14b8a6",
+  "ERNS.L": "#15803d",
+  "IGLT.L": "#334155",
+  "INXG.L": "#0284c7",
+  "SLXX.L": "#7c3aed",
+  "IGLH.L": "#0d9488",
   SHY: "#94a3b8",
   TLT: "#475569",
   LQD: "#a855f7",
@@ -259,14 +302,14 @@ const visibleConstraintControls: Array<{
   {
     key: "min_defensive_weight",
     label: "Defensive minimum",
-    helper: "Bonds, T-bills, and TIPS floor",
+    helper: "GBP cash, gilts, and hedged bonds floor",
     min: 0,
     max: 0.75,
     step: 0.01
   },
   {
     key: "max_single_asset",
-    label: "Single ETF cap",
+    label: "Single asset cap",
     helper: "Concentration limit",
     min: 0.2,
     max: 0.7,
@@ -275,13 +318,16 @@ const visibleConstraintControls: Array<{
 ];
 
 const defaultWeights: Record<string, number> = {
-  VTI: 0.333333,
-  VXUS: 0.176471,
-  AGG: 0.254902,
-  BIL: 0.068627,
-  GLD: 0.107843,
-  VNQ: 0.009804,
-  TIP: 0.04902
+  VTI: 0.2,
+  VXUS: 0.1,
+  AGG: 0.06,
+  "ERNS.L": 0.16,
+  "IGLT.L": 0.16,
+  "SLXX.L": 0.1,
+  "IGLH.L": 0.08,
+  "INXG.L": 0.04,
+  GLD: 0.07,
+  VNQ: 0.03
 };
 
 const defaultResult: ResearchResult = {
@@ -291,11 +337,11 @@ const defaultResult: ResearchResult = {
   data_summary: {
     source: "synthetic-fallback",
     label: "Demonstration scenario data",
-    description: "Deterministic scenario data used when public ETF download is unavailable.",
+    description: "Deterministic scenario data used when public instrument download is unavailable.",
     range_start: "2015-02-28",
     range_end: "2025-12-28",
     observations: 131,
-    assets: 7,
+    assets: 10,
     is_market_data: false
   },
   mandate: "Balanced",
@@ -307,6 +353,19 @@ const defaultResult: ResearchResult = {
   llm_enabled: true,
   llm_ideas_used: 8,
   universe_symbols: defaultUniverseSymbols,
+  currency_exposure: {
+    base_currency: "GBP",
+    quote_currency: "USD",
+    gbp_usd_rate: defaultGbpUsdRate,
+    source: "demo-assumption",
+    as_of: null,
+    usd_exposure: 0.464,
+    gbp_native_or_hedged: 0.536,
+    gbp_native: 0.46,
+    gbp_hedged: 0.08,
+    unhedged: 0.46,
+    warning: "This allocation has 46.4% USD exposure before hedging."
+  },
   memory: {
     used: false,
     prior_runs: 0,
@@ -337,6 +396,24 @@ const defaultResult: ResearchResult = {
     "Inflation Shock Absorber is the current top-ranked research candidate. It passed the locked guardrail checks and is ready for human review, not execution."
 };
 
+function freshDemoResult(): ResearchResult {
+  return {
+    ...defaultResult,
+    session_id: "research-fresh-demo",
+    updated_at: new Date().toISOString(),
+    completed_experiments: 0,
+    total_experiments: 0,
+    rejected_count: 0,
+    llm_ideas_used: 0,
+    memory: {
+      used: false,
+      prior_runs: 0,
+      lessons: []
+    },
+    turns: []
+  };
+}
+
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-GB", {
     style: "currency",
@@ -349,7 +426,13 @@ function formatShortCurrency(value: number) {
   if (value >= 1_000_000_000) {
     return `£${(value / 1_000_000_000).toFixed(1)}B`;
   }
-  return `£${Math.round(value / 1_000_000)}M`;
+  if (value >= 1_000_000) {
+    return `£${(value / 1_000_000).toFixed(value >= 10_000_000 ? 0 : 1)}M`;
+  }
+  if (value >= 1_000) {
+    return `£${Math.round(value / 1_000)}k`;
+  }
+  return formatCurrency(value);
 }
 
 function formatPercent(value: number, digits = 1) {
@@ -358,6 +441,14 @@ function formatPercent(value: number, digits = 1) {
 
 function formatSignedPercent(value: number, digits = 1) {
   return `${value < 0 ? "-" : ""}${Math.abs(value * 100).toFixed(digits)}%`;
+}
+
+function formatUsd(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0
+  }).format(value);
 }
 
 function shortSessionId(id: string) {
@@ -374,7 +465,7 @@ function formatMonth(value?: string) {
 function dataSummary(result: ResearchResult) {
   return result.data_summary ?? {
     source: result.source,
-    label: result.source === "synthetic-fallback" ? "Demonstration scenario data" : "Public monthly ETF closes",
+    label: result.source === "synthetic-fallback" ? "Demonstration scenario data" : "Public monthly instrument closes",
     description: "",
     range_start: "",
     range_end: "",
@@ -382,6 +473,63 @@ function dataSummary(result: ResearchResult) {
     assets: result.universe_symbols?.length || defaultUniverseSymbols.length,
     is_market_data: result.source !== "synthetic-fallback"
   };
+}
+
+function currencyExposureFromWeights(
+  weights: Record<string, number>,
+  symbols: string[],
+  existing?: CurrencyExposure
+): CurrencyExposure {
+  const gbpUsdRate = Number(existing?.gbp_usd_rate);
+  const fxRate = Number.isFinite(gbpUsdRate) && gbpUsdRate > 0 ? gbpUsdRate : defaultGbpUsdRate;
+  let usdExposure = 0;
+  let gbpNative = 0;
+  let gbpHedged = 0;
+  let unhedged = 0;
+
+  symbols.forEach((symbol) => {
+    const weight = Number(weights[symbol] || 0);
+    const asset = assetMetadata[symbol];
+    const currency = asset?.currency || "USD";
+    const hedge = asset?.hedge || "USD unhedged";
+    usdExposure += weight * Number(asset?.usdExposure ?? (currency === "GBP" ? 0 : 1));
+    if (hedge === "GBP native") {
+      gbpNative += weight;
+    } else if (hedge === "GBP hedged") {
+      gbpHedged += weight;
+    } else {
+      unhedged += weight;
+    }
+  });
+
+  usdExposure = Math.min(1, Math.max(0, usdExposure));
+  const gbpNativeOrHedged = Math.min(1, Math.max(0, 1 - usdExposure));
+  return {
+    base_currency: "GBP",
+    quote_currency: "USD",
+    gbp_usd_rate: fxRate,
+    source: existing?.source || "demo-assumption",
+    as_of: existing?.as_of ?? null,
+    usd_exposure: usdExposure,
+    gbp_native_or_hedged: gbpNativeOrHedged,
+    gbp_native: gbpNative,
+    gbp_hedged: gbpHedged,
+    unhedged,
+    warning: `This allocation has ${(usdExposure * 100).toFixed(1)}% USD exposure before hedging.`
+  };
+}
+
+function fxSourceLabel(source?: string) {
+  if (!source) {
+    return "demo assumption";
+  }
+  if (source.includes("yahoo")) {
+    return "Yahoo Finance";
+  }
+  if (source.includes("fallback") || source.includes("assumption")) {
+    return "fallback assumption";
+  }
+  return source;
 }
 
 function constraintsFromResult(result: ResearchResult) {
@@ -449,7 +597,7 @@ function stepNarrative(step: number, result: ResearchResult, job: ResearchJobSta
   if (runError) return runError;
   if (job?.status === "running" && job.message) return job.message;
   if (step === 0) return "We start with capital and a mandate. The rules are fixed before the system tests anything.";
-  if (step === 1) return `OpenAI proposes ${result.llm_ideas_used || 0} research hypotheses inside ${result.universe_symbols?.length || defaultUniverseSymbols.length} selected ETFs.`;
+  if (step === 1) return `OpenAI proposes ${result.llm_ideas_used || 0} research hypotheses inside ${result.universe_symbols?.length || defaultUniverseSymbols.length} selected instruments.`;
   if (step === 2) return `The evaluator simulates ${result.total_experiments} candidate portfolios and compares them to the mandate.`;
   if (step === 3) return `${result.rejected_count} candidates failed hard rules. Passing candidates move forward for ranking.`;
   const turnCount = result.turns?.length;
@@ -514,8 +662,10 @@ function CapitalAndConstraints({
   capitalText,
   constraints,
   isRunning,
+  isResetting,
   onCapitalTextChange,
   onConstraintChange,
+  onResetDemo,
   onUniverseToggle,
   onResearchTurnCountChange,
   researchTurnCount,
@@ -526,8 +676,10 @@ function CapitalAndConstraints({
   capitalText: string;
   constraints: ConstraintState;
   isRunning: boolean;
+  isResetting: boolean;
   onCapitalTextChange: (value: string) => void;
   onConstraintChange: (key: ConstraintKey, value: number) => void;
+  onResetDemo: () => void;
   onUniverseToggle: (symbol: string) => void;
   onResearchTurnCountChange: (value: number) => void;
   researchTurnCount: number;
@@ -554,6 +706,14 @@ function CapitalAndConstraints({
       <div className="mandateLine">
         <span>Mandate</span>
         <strong>{result.mandate}</strong>
+      </div>
+
+      <div className="resetDemoBlock">
+        <button disabled={isRunning || isResetting} onClick={onResetDemo} type="button">
+          <RefreshCcw size={14} />
+          {isResetting ? "Resetting" : "Reset demo"}
+        </button>
+        <span>Clears memory and latest run</span>
       </div>
 
       <div className="constraintBlock">
@@ -635,7 +795,7 @@ function CapitalAndConstraints({
         <strong>Market first</strong>
       </div>
       <p className="quietCopy">The system can only search inside this mandate. It cannot trade or change the rules.</p>
-      <p className="quietCopy">Each run requests public monthly ETF prices. If the download fails, the result is labelled as demo data.</p>
+      <p className="quietCopy">Each run requests public monthly prices and GBP/USD FX. If the download fails, the result is labelled as demo data.</p>
       <p className="capitalFootnote">Current pool: {formatCurrency(capital)}</p>
     </section>
   );
@@ -656,7 +816,7 @@ function EtfUniverseControl({
     <div className="etfBlock">
       <div className="panelTitle small">
         <Layers3 size={16} />
-        <span>ETF universe</span>
+        <span>Instrument shelf</span>
       </div>
       <div className="etfSummary">
         <span>Approved shelf</span>
@@ -664,7 +824,7 @@ function EtfUniverseControl({
           {universeSymbols.length} of {approvedEtfs.length}
         </strong>
       </div>
-      <div className="etfList" aria-label="Editable ETF universe">
+      <div className="etfList" aria-label="Editable instrument shelf">
         {approvedEtfs.map((asset) => {
           const selected = selectedSet.has(asset.symbol);
           const locked = selected && universeSymbols.length <= minUniverseSymbols;
@@ -678,7 +838,9 @@ function EtfUniverseControl({
               />
               <strong>{asset.symbol}</strong>
               <span>{asset.label}</span>
-              <em>{asset.category}</em>
+              <em>
+                {asset.category} · {asset.hedge}
+              </em>
             </label>
           );
         })}
@@ -718,6 +880,27 @@ function SelfImprovementTurns({
   universeSymbols: string[];
 }) {
   const turns = result.turns ?? [];
+  const [selectedTurnId, setSelectedTurnId] = useState<number | null>(null);
+  const selectedTurn = turns.find((turn) => turn.turn === selectedTurnId) || null;
+  const displaySymbols = useMemo(() => symbolsFromResult(result, universeSymbols), [result, universeSymbols]);
+
+  useEffect(() => {
+    if (!selectedTurnId) {
+      return undefined;
+    }
+    if (!turns.some((turn) => turn.turn === selectedTurnId)) {
+      setSelectedTurnId(null);
+      return undefined;
+    }
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setSelectedTurnId(null);
+      }
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [selectedTurnId, turns]);
+
   if (step < 4 || turns.length === 0) {
     return null;
   }
@@ -731,8 +914,16 @@ function SelfImprovementTurns({
       </div>
 
       <div className="turnList">
-        {turns.map((turn, index) => (
-          <article className={`turnRow ${isRunning && index === turns.length - 1 ? "active" : ""}`} key={`${turn.turn}-${turn.label}`}>
+        {turns.map((turn, index) => {
+          const exposure = currencyExposureFromWeights(turn.weights, displaySymbols, result.currency_exposure);
+          return (
+          <button
+            aria-label={`View details for turn ${turn.turn}: ${turn.label}`}
+            className={`turnRow ${isRunning && index === turns.length - 1 ? "active" : ""}`}
+            key={`${turn.turn}-${turn.label}`}
+            onClick={() => setSelectedTurnId(turn.turn)}
+            type="button"
+          >
             <div className="turnIndex">
               <span>Turn {turn.turn}</span>
               <strong>{turn.label}</strong>
@@ -746,8 +937,7 @@ function SelfImprovementTurns({
                 <span>Best so far</span>
                 <strong>{turn.best_candidate}</strong>
               </div>
-              <TurnAllocationBar symbols={symbolsFromResult(result, universeSymbols)} weights={turn.weights} />
-              <TurnExplanation turn={turn} />
+              <TurnAllocationBar symbols={displaySymbols} weights={turn.weights} />
             </div>
 
             <div className="turnStats">
@@ -763,10 +953,115 @@ function SelfImprovementTurns({
                 <span>Drawdown</span>
                 <strong>{formatSignedPercent(turn.max_drawdown)}</strong>
               </div>
+              <div>
+                <span>USD</span>
+                <strong>{formatPercent(exposure.usd_exposure)}</strong>
+              </div>
             </div>
-          </article>
-        ))}
+
+            <span className="turnAction">
+              Details
+              <ArrowRight size={13} />
+            </span>
+          </button>
+          );
+        })}
       </div>
+
+      {selectedTurn && (
+        <TurnDetailsDrawer
+          displaySymbols={displaySymbols}
+          onClose={() => setSelectedTurnId(null)}
+          result={result}
+          turn={selectedTurn}
+        />
+      )}
+    </div>
+  );
+}
+
+function TurnDetailsDrawer({
+  displaySymbols,
+  onClose,
+  result,
+  turn
+}: {
+  displaySymbols: string[];
+  onClose: () => void;
+  result: ResearchResult;
+  turn: ResearchTurn;
+}) {
+  const exposure = currencyExposureFromWeights(turn.weights, displaySymbols, result.currency_exposure);
+  const holdings = displaySymbols
+    .map((symbol) => ({
+      color: assetColors[symbol] || "#94a3b8",
+      hedge: assetMetadata[symbol]?.hedge || "USD unhedged",
+      label: assetLabels[symbol] || symbol,
+      symbol,
+      weight: Number(turn.weights[symbol] || 0)
+    }))
+    .filter((item) => item.weight > 0.004)
+    .sort((a, b) => b.weight - a.weight)
+    .slice(0, 8);
+
+  return (
+    <div className="drawerBackdrop" onClick={onClose}>
+      <aside aria-label={`Turn ${turn.turn} details`} aria-modal="true" className="turnDrawer" onClick={(event) => event.stopPropagation()} role="dialog">
+        <div className="drawerHeader">
+          <div>
+            <span>Turn {turn.turn}</span>
+            <h3>{turn.label}</h3>
+            <p>{turn.focus}</p>
+          </div>
+          <button aria-label="Close turn details" onClick={onClose} type="button">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="drawerHero">
+          <span>Best so far</span>
+          <strong>{turn.best_candidate}</strong>
+          <TurnAllocationBar symbols={displaySymbols} weights={turn.weights} />
+        </div>
+
+        <div className="drawerMetrics">
+          <div>
+            <span>Score</span>
+            <strong>{turn.score.toFixed(2)}</strong>
+          </div>
+          <div>
+            <span>Return</span>
+            <strong>{formatPercent(turn.expected_return)}</strong>
+          </div>
+          <div>
+            <span>Drawdown</span>
+            <strong>{formatSignedPercent(turn.max_drawdown)}</strong>
+          </div>
+          <div>
+            <span>USD exposure</span>
+            <strong>{formatPercent(exposure.usd_exposure)}</strong>
+          </div>
+        </div>
+
+        <TurnExplanation turn={turn} />
+
+        <div className="drawerHoldings">
+          <div className="drawerSectionTitle">
+            <span>Allocation mix</span>
+            <strong>{holdings.length} largest sleeves</strong>
+          </div>
+          {holdings.map((item) => (
+            <div key={item.symbol}>
+              <i style={{ background: item.color }} />
+              <span>
+                {item.label}
+                <small>{item.hedge}</small>
+              </span>
+              <strong>{formatPercent(item.weight)}</strong>
+            </div>
+          ))}
+        </div>
+      </aside>
     </div>
   );
 }
@@ -854,6 +1149,34 @@ function MemoryStrip({ memory }: { memory?: ResearchMemory }) {
   );
 }
 
+function ResearchSignalsStrip({ result }: { result: ResearchResult }) {
+  const memory = result.memory;
+  const ideasUsed = result.llm_ideas_used ?? 0;
+  const memoryHeadline = memory?.used
+    ? `${memory.prior_runs} prior ${memory.prior_runs === 1 ? "run" : "runs"}`
+    : "No prior runs";
+  const memoryDetail = memory?.used
+    ? `Recalled ${memory.last_success_candidate || "prior allocation"}`
+    : "Will store this run";
+  const openAiHeadline = result.llm_enabled === false ? "Off" : ideasUsed > 0 ? `${ideasUsed} ideas` : "0 ideas";
+  const openAiDetail = ideasUsed > 0 ? "Proposals evaluated by guardrails" : "Deterministic search still ran";
+
+  return (
+    <div className="researchSignals">
+      <div>
+        <span>Memory</span>
+        <strong>{memoryHeadline}</strong>
+        <em>{memoryDetail}</em>
+      </div>
+      <div>
+        <span>OpenAI</span>
+        <strong>{openAiHeadline}</strong>
+        <em>{openAiDetail}</em>
+      </div>
+    </div>
+  );
+}
+
 function GuardrailList({ risk }: { risk: ResearchRisk[] }) {
   return (
     <div className="guardrailList">
@@ -864,6 +1187,56 @@ function GuardrailList({ risk }: { risk: ResearchRisk[] }) {
           <em>{row.limit}</em>
         </div>
       ))}
+    </div>
+  );
+}
+
+function CurrencyExposurePanel({
+  currencyExposure,
+  gbpCapital,
+  usdEquivalent
+}: {
+  currencyExposure: CurrencyExposure;
+  gbpCapital: number;
+  usdEquivalent: number;
+}) {
+  const usdAmount = gbpCapital * currencyExposure.usd_exposure;
+  const gbpProtectedAmount = gbpCapital * currencyExposure.gbp_native_or_hedged;
+  const nativeAmount = gbpCapital * currencyExposure.gbp_native;
+  const hedgedAmount = gbpCapital * currencyExposure.gbp_hedged;
+
+  return (
+    <div className="currencyPanel" aria-label="GBP currency exposure">
+      <div className="currencyWarning">
+        <span>{currencyExposure.warning}</span>
+        <strong>
+          GBP/USD {currencyExposure.gbp_usd_rate.toFixed(4)}
+          <small>{fxSourceLabel(currencyExposure.source)}</small>
+        </strong>
+      </div>
+
+      <div className="currencyTiles">
+        <div>
+          <span>USD unhedged</span>
+          <strong>{formatPercent(currencyExposure.usd_exposure)}</strong>
+          <em>{formatShortCurrency(usdAmount)}</em>
+        </div>
+        <div>
+          <span>GBP native / hedged</span>
+          <strong>{formatPercent(currencyExposure.gbp_native_or_hedged)}</strong>
+          <em>{formatShortCurrency(gbpProtectedAmount)}</em>
+        </div>
+        <div>
+          <span>Capital in USD</span>
+          <strong>{formatUsd(usdEquivalent)}</strong>
+          <em>
+            Native {formatPercent(currencyExposure.gbp_native)} · Hedged {formatPercent(currencyExposure.gbp_hedged)}
+          </em>
+        </div>
+      </div>
+      <p>
+        GBP-native: {formatShortCurrency(nativeAmount)} · GBP-hedged: {formatShortCurrency(hedgedAmount)} · FX view is research-only.
+      </p>
     </div>
   );
 }
@@ -947,8 +1320,7 @@ function SimulationPanel({
         </div>
       </div>
 
-      <MemoryStrip memory={result.memory} />
-      <OpenAiStrip result={result} />
+      <ResearchSignalsStrip result={result} />
 
       <div className="stageList">
         {flowSteps.slice(1).map((item, index) => {
@@ -992,11 +1364,17 @@ function AllocationPanel({
     return displaySymbols.map((symbol) => ({
       amount: capital * Number(weights[symbol] || 0),
       color: assetColors[symbol] || "#94a3b8",
+      hedge: assetMetadata[symbol]?.hedge || "USD unhedged",
       label: assetLabels[symbol] || symbol,
       symbol,
       weight: Number(weights[symbol] || 0)
     }));
   }, [capital, displaySymbols, result.candidate.weights]);
+  const currencyExposure = useMemo(
+    () => currencyExposureFromWeights(result.candidate.weights ?? defaultWeights, displaySymbols, result.currency_exposure),
+    [displaySymbols, result.candidate.weights, result.currency_exposure]
+  );
+  const usdEquivalent = capital * currencyExposure.gbp_usd_rate;
 
   const ready = step >= 4;
 
@@ -1028,11 +1406,16 @@ function AllocationPanel({
             ))}
           </div>
 
+          <CurrencyExposurePanel currencyExposure={currencyExposure} gbpCapital={capital} usdEquivalent={usdEquivalent} />
+
           <div className="allocationList">
             {allocation.map((item) => (
               <div key={item.symbol}>
                 <i style={{ background: item.color }} />
-                <span>{item.label}</span>
+                <span>
+                  {item.label}
+                  <small>{item.hedge}</small>
+                </span>
                 <strong>{formatPercent(item.weight)}</strong>
                 <em>{formatShortCurrency(item.amount)}</em>
               </div>
@@ -1098,7 +1481,7 @@ function DataProvenance({ result }: { result: ResearchResult }) {
       <span>{summary.is_market_data ? "Market data" : "Demo data"}</span>
       <strong>{summary.label}</strong>
       <em>
-        {formatMonth(summary.range_start)} to {formatMonth(summary.range_end)} · {summary.assets} ETFs · {summary.observations} monthly observations
+        {formatMonth(summary.range_start)} to {formatMonth(summary.range_end)} · {summary.assets} instruments · {summary.observations} monthly observations
       </em>
     </div>
   );
@@ -1108,6 +1491,7 @@ export function App() {
   const [capitalText, setCapitalText] = useState("£1,000,000");
   const [constraints, setConstraints] = useState<ConstraintState>(defaultConstraints);
   const [isRunning, setIsRunning] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const [job, setJob] = useState<ResearchJobStatus | null>(null);
   const [runError, setRunError] = useState("");
   const [researchTurnCount, setResearchTurnCount] = useState(5);
@@ -1246,6 +1630,35 @@ export function App() {
     }
   };
 
+  const resetDemo = async () => {
+    if (isRunning || isResetting) {
+      return;
+    }
+
+    setIsResetting(true);
+    setRunError("");
+
+    try {
+      const response = await fetch("/api/research/reset", { method: "POST" });
+      const payload = (await response.json().catch(() => ({}))) as ResearchResetResponse;
+      if (!response.ok) {
+        throw new Error(payload.error || "Demo state could not be reset.");
+      }
+
+      setCapitalText("£1,000,000");
+      setConstraints(defaultConstraints);
+      setResearchTurnCount(5);
+      setUniverseSymbols(defaultUniverseSymbols);
+      setJob(null);
+      setResult(freshDemoResult());
+      setStep(0);
+    } catch (error) {
+      setRunError(error instanceof Error ? error.message : "Demo state could not be reset.");
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   const updateCapitalText = (value: string) => {
     const digits = value.replace(/[^0-9]/g, "");
     if (!digits) {
@@ -1314,8 +1727,10 @@ export function App() {
             capitalText={capitalText}
             constraints={constraints}
             isRunning={isRunning}
+            isResetting={isResetting}
             onCapitalTextChange={updateCapitalText}
             onConstraintChange={updateConstraint}
+            onResetDemo={resetDemo}
             onResearchTurnCountChange={updateResearchTurnCount}
             onUniverseToggle={toggleUniverseSymbol}
             researchTurnCount={researchTurnCount}

@@ -8,23 +8,56 @@ from typing import Any
 from research.universe import approved_asset_order
 
 ASSET_ORDER = approved_asset_order()
-DEFENSIVE_SYMBOLS = ("AGG", "BIL", "TIP", "SHY", "TLT", "LQD")
+DEFENSIVE_SYMBOLS = ("AGG", "BIL", "ERNS.L", "IGLT.L", "INXG.L", "SLXX.L", "IGLH.L", "TIP", "SHY", "TLT", "LQD")
 EQUITY_SYMBOLS = ("VTI", "VXUS", "QQQ", "IWM", "VTV", "VUG", "USMV")
 
 BASE_WEIGHTS = {
-    "conservative": {"VTI": 0.22, "VXUS": 0.12, "AGG": 0.46, "BIL": 0.10, "GLD": 0.06, "VNQ": 0.02, "TIP": 0.02},
-    "balanced": {"VTI": 0.34, "VXUS": 0.18, "AGG": 0.30, "BIL": 0.07, "GLD": 0.07, "VNQ": 0.02, "TIP": 0.02},
-    "growth": {"VTI": 0.46, "VXUS": 0.24, "AGG": 0.16, "BIL": 0.04, "GLD": 0.05, "VNQ": 0.03, "TIP": 0.02}
+    "conservative": {
+        "VTI": 0.12,
+        "VXUS": 0.06,
+        "AGG": 0.06,
+        "ERNS.L": 0.26,
+        "IGLT.L": 0.24,
+        "SLXX.L": 0.14,
+        "IGLH.L": 0.02,
+        "INXG.L": 0.06,
+        "GLD": 0.04
+    },
+    "balanced": {
+        "VTI": 0.20,
+        "VXUS": 0.10,
+        "AGG": 0.06,
+        "ERNS.L": 0.16,
+        "IGLT.L": 0.16,
+        "SLXX.L": 0.10,
+        "IGLH.L": 0.08,
+        "INXG.L": 0.04,
+        "GLD": 0.07,
+        "VNQ": 0.03
+    },
+    "growth": {
+        "VTI": 0.36,
+        "VXUS": 0.18,
+        "QQQ": 0.08,
+        "AGG": 0.06,
+        "ERNS.L": 0.08,
+        "IGLT.L": 0.06,
+        "SLXX.L": 0.06,
+        "INXG.L": 0.03,
+        "GLD": 0.06,
+        "VNQ": 0.03
+    }
 }
 
 SEED_IDEAS = [
     ("Global Quality Multi-Asset", "Tilt toward diversified equity while preserving defensive ballast."),
-    ("Defensive Carry Blend", "Increase bonds and T-bills to reduce drawdown while retaining income."),
+    ("Defensive Carry Blend", "Increase GBP cash, gilts, and high-quality bonds to reduce drawdown while retaining income."),
     ("Inflation Shock Absorber", "Use gold and TIPS as inflation-sensitive diversifiers."),
     ("Global Equity Balance", "Spread equity risk across US and international exposures."),
     ("Real Asset Sleeve", "Add moderate real asset exposure while respecting drawdown limits."),
-    ("Cash Optionality", "Hold more T-bills to reduce volatility and create rebalance capacity."),
-    ("Bond Barbell", "Pair core bonds with T-bills and TIPS for lower rate sensitivity."),
+    ("Sterling Liquidity Reserve", "Hold more GBP cash-like exposure to reduce volatility and preserve deployment capacity."),
+    ("Gilt Barbell", "Pair ultrashort GBP bonds with gilts and linkers for rate and inflation resilience."),
+    ("GBP Hedge Upgrade", "Test whether hedged global bonds reduce unhedged USD exposure without losing defensive carry."),
     ("Diversified Growth", "Increase equity return drivers without breaching concentration limits."),
     ("Nasdaq Growth Engine", "Test whether a focused growth sleeve improves expected return."),
     ("Minimum Volatility Equity", "Replace broad equity risk with lower-volatility equity exposure."),
@@ -156,7 +189,19 @@ def defensive_target_weights(
     defensive = distribute_capped(
         target,
         defensive_symbols,
-        {"AGG": 0.32, "BIL": 0.20, "TIP": 0.14, "SHY": 0.15, "TLT": 0.08, "LQD": 0.11},
+        {
+            "ERNS.L": 0.22,
+            "IGLT.L": 0.20,
+            "SLXX.L": 0.14,
+            "IGLH.L": 0.12,
+            "INXG.L": 0.10,
+            "AGG": 0.10,
+            "BIL": 0.04,
+            "TIP": 0.04,
+            "SHY": 0.02,
+            "TLT": 0.01,
+            "LQD": 0.01
+        },
         cap
     )
     nondefensive = distribute_capped(
@@ -241,7 +286,7 @@ def constraint_candidates(
     if math.isfinite(max_drawdown) and max_drawdown < 0.19:
         output.append(candidate(
             "Lower Drawdown Constraint Fit",
-            "Shift toward bonds, T-bills, and TIPS when the drawdown ceiling is tightened.",
+        "Shift toward GBP cash, gilts, and hedged bonds when the drawdown ceiling is tightened.",
             defensive_target_weights(max(min_defensive, 0.58), max_single_asset, order),
             "constraint",
             order
@@ -259,7 +304,7 @@ def constraint_candidates(
     if math.isfinite(max_single_asset) and max_single_asset < max(base.values()):
         output.append(candidate(
             "Concentration Constraint Fit",
-            "Redistribute positions so the largest ETF weight respects the single-asset cap.",
+            "Redistribute positions so the largest instrument weight respects the single-asset cap.",
             cap_and_redistribute(base, max_single_asset, order),
             "constraint",
             order
@@ -316,14 +361,14 @@ def memory_candidates(
         output.append(candidate(
             "Memory Return Recovery",
             "Test whether the remembered allocation can restore modest equity exposure without breaking guardrails.",
-            apply_tilts(prior, {"VTI": 0.025, "VXUS": 0.015, "QQQ": 0.015, "AGG": -0.025, "BIL": -0.015, "SHY": -0.015}, order),
+            apply_tilts(prior, {"VTI": 0.025, "VXUS": 0.015, "QQQ": 0.015, "ERNS.L": -0.02, "IGLT.L": -0.015, "AGG": -0.01}, order),
             "memory",
             order
         ))
         output.append(candidate(
             "Memory Risk Repair",
             "Test whether the remembered allocation improves drawdown by adding defensive ballast.",
-            apply_tilts(prior, {"AGG": 0.020, "BIL": 0.012, "SHY": 0.012, "LQD": 0.010, "VTI": -0.025, "VXUS": -0.015, "QQQ": -0.014}, order),
+            apply_tilts(prior, {"ERNS.L": 0.020, "IGLT.L": 0.016, "IGLH.L": 0.012, "SLXX.L": 0.010, "VTI": -0.025, "VXUS": -0.015, "QQQ": -0.014}, order),
             "memory",
             order
         ))
@@ -357,15 +402,17 @@ def idea_to_candidate(
     tilt = str(idea.get("tilt") or "").lower()
     tilts: dict[str, float] = {}
     if "quality" in tilt or "equity" in tilt:
-        tilts.update({"VTI": 0.03, "VXUS": 0.01, "QQQ": 0.02, "AGG": -0.03, "BIL": -0.01, "SHY": -0.01})
+        tilts.update({"VTI": 0.03, "VXUS": 0.01, "QQQ": 0.02, "ERNS.L": -0.02, "IGLT.L": -0.02, "AGG": -0.01})
     if "defensive" in tilt or "drawdown" in tilt:
-        tilts.update({"AGG": 0.03, "BIL": 0.02, "SHY": 0.02, "USMV": 0.02, "VTI": -0.04, "VXUS": -0.02, "QQQ": -0.01})
+        tilts.update({"ERNS.L": 0.025, "IGLT.L": 0.025, "IGLH.L": 0.015, "USMV": 0.02, "VTI": -0.04, "VXUS": -0.02, "QQQ": -0.01})
     if "inflation" in tilt or "real" in tilt:
-        tilts.update({"GLD": 0.03, "DBC": 0.025, "TIP": 0.025, "AGG": -0.03, "VTI": -0.02})
+        tilts.update({"GLD": 0.03, "DBC": 0.025, "INXG.L": 0.03, "TIP": 0.015, "AGG": -0.02, "VTI": -0.02})
     if "credit" in tilt or "income" in tilt:
-        tilts.update({"LQD": 0.025, "HYG": 0.025, "AGG": -0.02, "VTI": -0.015, "VXUS": -0.015})
+        tilts.update({"SLXX.L": 0.03, "LQD": 0.02, "HYG": 0.02, "AGG": -0.02, "VTI": -0.015, "VXUS": -0.015})
     if "duration" in tilt or "treasury" in tilt:
-        tilts.update({"TLT": 0.035, "SHY": 0.015, "AGG": -0.025, "VTI": -0.015, "VXUS": -0.010})
+        tilts.update({"IGLT.L": 0.035, "INXG.L": 0.015, "TLT": 0.015, "AGG": -0.02, "VTI": -0.015, "VXUS": -0.010})
+    if "hedge" in tilt or "currency" in tilt or "sterling" in tilt or "gbp" in tilt:
+        tilts.update({"IGLH.L": 0.035, "ERNS.L": 0.02, "VTI": -0.025, "VXUS": -0.015, "AGG": -0.015})
     if not tilts:
         return None
     return candidate(name, hypothesis, apply_tilts(base, tilts, order), "llm", order)
@@ -388,18 +435,19 @@ def generate_candidates(
     candidates.extend(memory_candidates(base, memory_context, constraint_overrides, order))
 
     deterministic_tilts = [
-        {"VTI": 0.04, "VXUS": 0.01, "QQQ": 0.02, "AGG": -0.03, "BIL": -0.02, "SHY": -0.02},
-        {"VTI": -0.04, "VXUS": -0.01, "AGG": 0.03, "BIL": 0.02, "SHY": 0.02},
-        {"GLD": 0.035, "DBC": 0.025, "TIP": 0.03, "AGG": -0.04, "VNQ": -0.01},
+        {"VTI": 0.04, "VXUS": 0.01, "QQQ": 0.02, "ERNS.L": -0.025, "IGLT.L": -0.025, "AGG": -0.02},
+        {"VTI": -0.04, "VXUS": -0.01, "ERNS.L": 0.025, "IGLT.L": 0.025, "IGLH.L": 0.015},
+        {"GLD": 0.035, "DBC": 0.025, "INXG.L": 0.03, "AGG": -0.03, "VNQ": -0.01},
         {"VXUS": 0.05, "VTI": -0.03, "AGG": -0.02},
         {"VNQ": 0.05, "VTI": -0.03, "AGG": -0.02},
-        {"BIL": 0.035, "SHY": 0.025, "VTI": -0.03, "VXUS": -0.02},
-        {"TIP": 0.035, "TLT": 0.025, "AGG": -0.03, "BIL": -0.02},
+        {"ERNS.L": 0.04, "SLXX.L": 0.02, "VTI": -0.035, "VXUS": -0.025},
+        {"INXG.L": 0.035, "IGLT.L": 0.03, "AGG": -0.025, "VTI": -0.02},
+        {"IGLH.L": 0.045, "ERNS.L": 0.02, "VTI": -0.035, "VXUS": -0.02, "AGG": -0.01},
         {"VTI": 0.03, "GLD": 0.025, "DBC": 0.02, "AGG": -0.04, "BIL": -0.02},
         {"QQQ": 0.055, "VUG": 0.025, "AGG": -0.04, "BIL": -0.02},
         {"USMV": 0.055, "VTI": -0.025, "VXUS": -0.015, "QQQ": -0.015},
-        {"LQD": 0.04, "HYG": 0.025, "AGG": -0.03, "VTI": -0.02},
-        {"TLT": 0.055, "BIL": 0.015, "VTI": -0.04, "VXUS": -0.02},
+        {"SLXX.L": 0.04, "LQD": 0.02, "HYG": 0.015, "AGG": -0.025, "VTI": -0.02},
+        {"IGLT.L": 0.045, "INXG.L": 0.02, "VTI": -0.04, "VXUS": -0.02},
         {"DBC": 0.045, "GLD": 0.025, "AGG": -0.035, "VTI": -0.02}
     ]
     for index, (name, hypothesis) in enumerate(SEED_IDEAS):

@@ -59,7 +59,7 @@ Return only JSON, with no markdown. Use this shape:
   {{
     "name": "short candidate name",
     "hypothesis": "one sentence explaining the research idea",
-    "tilt": "quality|defensive|inflation|real assets|global diversification|credit|duration",
+    "tilt": "quality|defensive|inflation|real assets|global diversification|credit|duration|currency hedge|sterling",
     "weights": {json.dumps(sample_weights)}
   }}
 ]
@@ -68,7 +68,7 @@ Rules:
 - Generate {count} candidates for the {mandate} mandate.
 - Weights must sum to 1.0.
 - No leverage, no options, no individual securities, no live trading.
-- Use only these approved ETF symbols: {allowed_symbol_text}.
+- Use only these approved instrument symbols: {allowed_symbol_text}.
 - Do not claim guaranteed return.
 
 Research memory from prior runs:
