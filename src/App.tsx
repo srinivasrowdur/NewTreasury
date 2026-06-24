@@ -317,18 +317,18 @@ const defaultResult: ResearchResult = {
 };
 
 function formatCurrency(value: number) {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("en-GB", {
     style: "currency",
-    currency: "USD",
+    currency: "GBP",
     maximumFractionDigits: 0
   }).format(value);
 }
 
 function formatShortCurrency(value: number) {
   if (value >= 1_000_000_000) {
-    return `$${(value / 1_000_000_000).toFixed(1)}B`;
+    return `£${(value / 1_000_000_000).toFixed(1)}B`;
   }
-  return `$${Math.round(value / 1_000_000)}M`;
+  return `£${Math.round(value / 1_000_000)}M`;
 }
 
 function formatPercent(value: number, digits = 1) {
@@ -1044,7 +1044,7 @@ function DataProvenance({ result }: { result: ResearchResult }) {
 }
 
 export function App() {
-  const [capitalText, setCapitalText] = useState("$100,000,000");
+  const [capitalText, setCapitalText] = useState("£1,000,000");
   const [constraints, setConstraints] = useState<ConstraintState>(defaultConstraints);
   const [isRunning, setIsRunning] = useState(false);
   const [job, setJob] = useState<ResearchJobStatus | null>(null);
@@ -1079,7 +1079,7 @@ export function App() {
 
   const capital = useMemo(() => {
     const parsed = Number(capitalText.replace(/[^0-9]/g, ""));
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : 100_000_000;
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 1_000_000;
   }, [capitalText]);
 
   const activeFlowStep = Math.min(step, flowSteps.length - 1);
